@@ -2,6 +2,7 @@
 // Las mismas reglas se aplican en el navegador con atributos HTML (ver vistas/autenticacion).
 const { body, validationResult, matchedData } = require('express-validator');
 const authService = require('./autenticacion.servicio');
+const { ROLES } = require('../../compartido/constantes');
 
 const LETTERS_AND_SPACES = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$/;
 
@@ -61,6 +62,16 @@ const phoneRule = body('phone')
 
 const registerRules = [nameRule, emailRule, passwordRule(), nationalIdRule, phoneRule];
 
+// HU-05: mismas reglas del registro (nombre, correo, clave) más el rol del personal.
+const staffRules = [
+  nameRule,
+  emailRule,
+  passwordRule(),
+  body('role')
+    .isIn([ROLES.TECHNICIAN, ROLES.ADMIN])
+    .withMessage('Elige un rol: técnico o administrador.'),
+];
+
 const loginRules = [
   body('email').trim().toLowerCase().notEmpty().withMessage('Ingresa tu correo.'),
   body('password').notEmpty().withMessage('Ingresa tu contraseña.'),
@@ -87,6 +98,7 @@ module.exports = {
   nationalIdRule,
   phoneRule,
   registerRules,
+  staffRules,
   loginRules,
   collectErrors,
   matchedData,

@@ -1,6 +1,7 @@
 // Controlador de autenticación: recibe la petición, llama al servicio y responde (HU-01 a HU-05).
 // No pongas aquí la lógica de negocio; va en autenticacion.servicio.js.
 const authService = require('./autenticacion.servicio');
+const { SESSION_COOKIE_NAME } = require('../../configuracion/sesion');
 const { collectErrors, matchedData } = require('./autenticacion.validaciones');
 
 // Solo se acepta una ruta interna como destino posterior al login (evita redirecciones a otros sitios).
@@ -83,4 +84,59 @@ async function login(req, res) {
   return res.redirect(returnTo || authService.homePathForRole(user.role));
 }
 
-module.exports = { showRegister, register, showLogin, login };
+// HU-04: destruye la sesión en el servidor y borra las cookies.
+function logout(req, res, next) {
+  req.session.destroy((error) => {
+    if (error) return next(error);
+    res.clearCookie(SESSION_COOKIE_NAME);
+    res.clearCookie('reparus.csrf');
+    return res.redirect('/');
+  });
+}
+
+// HU-05: pantalla del administrador para crear técnicos y administradores.
+async function renderStaff(res, { status = 200, errors = {}, values = {} } = {}) {
+  const staff = await authService.listStaff();
+  return res.status(status).render('autenticacion/usuarios-personal', {
+    titulo: 'Personal',
+    staff,
+    errors,
+    values,
+  });
+}
+
+function showStaff(req, res) {
+  return renderStaff(res);
+}
+
+async function createStaff(req, res) {
+  const { errors, values, hasErrors } = collectErrors(req);
+  if (hasErrors) return renderStaff(res, { status: 400, errors, values });
+
+  const data = matchedData(req);
+  try {
+    await authService.createStaffUser(data);
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return renderStaff(res, {
+        status: 400,
+        errors: { email: 'Este correo ya está registrado.' },
+        values,
+      });
+    }
+    throw error;
+  }
+
+  req.session.flash = { type: 'success', text: 'Usuario del personal creado.' };
+  return res.redirect('/admin/usuarios');
+}
+
+module.exports = {
+  showRegister,
+  register,
+  showLogin,
+  login,
+  logout,
+  showStaff,
+  createStaff,
+};

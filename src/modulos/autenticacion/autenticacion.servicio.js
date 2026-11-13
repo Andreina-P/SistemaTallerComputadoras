@@ -54,6 +54,23 @@ function toSessionUser(user) {
   return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
+// HU-05: el administrador crea usuarios del personal (técnico o administrador).
+async function createStaffUser({ name, email, password, role }) {
+  if (![ROLES.TECHNICIAN, ROLES.ADMIN].includes(role)) {
+    throw new Error('Rol de personal no válido');
+  }
+  const passwordHash = await hashPassword(password);
+  return User.create({ name, email, passwordHash, role });
+}
+
+async function listStaff() {
+  return User.findAll({
+    where: { role: [ROLES.TECHNICIAN, ROLES.ADMIN] },
+    attributes: ['id', 'name', 'email', 'role', 'active'],
+    order: [['name', 'ASC']],
+  });
+}
+
 // Página a la que va cada rol después de iniciar sesión.
 // Cliente: "Mis órdenes". Personal: listado de órdenes. (Las pantallas las hace el módulo de órdenes, HU-08.)
 function homePathForRole() {
@@ -66,6 +83,8 @@ module.exports = {
   nationalIdExists,
   registerCustomer,
   authenticate,
+  createStaffUser,
+  listStaff,
   toSessionUser,
   homePathForRole,
 };
