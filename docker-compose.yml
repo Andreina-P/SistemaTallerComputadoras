@@ -1,0 +1,50 @@
+# Levanta todo el entorno con un solo comando:  docker compose up --build
+# Antes, copia .env.example como .env
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-reparus}
+      POSTGRES_USER: ${DB_USER:-reparus}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-reparus}
+    ports:
+      - '${DB_PORT_EXTERNAL:-5433}:5432'
+    volumes:
+      - reparus_datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - '8025:8025' # Bandeja de correos simulados
+      - '1025:1025' # SMTP
+
+  app:
+    build: .
+    command: sh -c "npm run db:migrate && npm run dev"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  reparus_datos:

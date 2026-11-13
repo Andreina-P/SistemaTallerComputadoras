@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-labelledby="titulo">
+  <title id="titulo">Reparus Tec</title>
+  <rect x="4" y="4" width="112" height="112" rx="28" fill="#871385"/>
+  <g transform="rotate(45 60 60)">
+    <rect x="52" y="56" width="16" height="48" rx="8" fill="#FFFFFF"/>
+    <circle cx="60" cy="40" r="22" fill="#FFFFFF"/>
+    <rect x="52" y="10" width="16" height="30" rx="8" fill="#871385"/>
+  </g>
+  <path d="M72 93 L82 103 L101 80" fill="none" stroke="#33B8EE" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

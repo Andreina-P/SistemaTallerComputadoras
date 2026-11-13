@@ -1,0 +1,22 @@
+<section class="text-center py-5">
+  <img src="/img/logo-icono.svg" alt="Logo de Reparus Tec" width="96" height="96" class="mb-3">
+  <h1 class="display-5 fw-bold">Reparus <span class="text-principal">Tec</span></h1>
+  <p class="lead mb-4">Sistema de gestión de órdenes de reparación de computadoras.</p>
+
+  <% if (!currentUser) { %>
+    <a class="btn btn-primary btn-lg me-2" href="/login">Iniciar sesión</a>
+    <a class="btn btn-outline-primary btn-lg" href="/registro">Crear cuenta</a>
+  <% } else { %>
+    <a class="btn btn-primary btn-lg" href="/ordenes">Ver órdenes</a>
+  <% } %>
+</section>
+
+<section class="py-4">
+  <h2 class="h5">Estados de una orden</h2>
+  <p class="text-secondary">Los colores de los estados son los mismos en todas las pantallas.</p>
+  <div class="d-flex flex-wrap gap-2">
+    <% Object.entries(statusLabels).forEach(([code, label]) => { %>
+      <span class="badge estado estado-<%= code %>"><%= label %></span>
+    <% }) %>
+  </div>
+</section>

@@ -1,0 +1,122 @@
+/* Tema de Reparus Tec: paleta del logo sobre Bootstrap 5. Todos los colores salen de aquí. */
+
+:root {
+  --color-principal: #871385; /* morado */
+  --color-principal-oscuro: #6a0f68;
+  --color-secundario: #33b8ee; /* azul cielo */
+  --color-acento: #18b7c3; /* turquesa */
+  --color-peligro: #ff3850; /* rojo rosado */
+  --color-texto: #1b2a4e; /* azul marino */
+  --color-fondo: #f5f7fa;
+
+  /* Variables de Bootstrap */
+  --bs-primary: #871385;
+  --bs-primary-rgb: 135, 19, 133;
+  --bs-body-color: #1b2a4e;
+  --bs-body-bg: #f5f7fa;
+  --bs-body-font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bs-link-color: #871385;
+  --bs-link-hover-color: #6a0f68;
+  --bs-link-color-rgb: 135, 19, 133;
+  --bs-link-hover-color-rgb: 106, 15, 104;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 800;
+  color: var(--color-texto);
+}
+
+.text-principal {
+  color: var(--color-principal) !important;
+}
+
+/* Botones */
+.btn-primary {
+  --bs-btn-bg: var(--color-principal);
+  --bs-btn-border-color: var(--color-principal);
+  --bs-btn-hover-bg: var(--color-principal-oscuro);
+  --bs-btn-hover-border-color: var(--color-principal-oscuro);
+  --bs-btn-active-bg: #590d57;
+  --bs-btn-active-border-color: #590d57;
+  --bs-btn-disabled-bg: var(--color-principal);
+  --bs-btn-disabled-border-color: var(--color-principal);
+  --bs-btn-focus-shadow-rgb: 135, 19, 133;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--color-principal);
+  --bs-btn-border-color: var(--color-principal);
+  --bs-btn-hover-bg: var(--color-principal);
+  --bs-btn-hover-border-color: var(--color-principal);
+  --bs-btn-active-bg: var(--color-principal-oscuro);
+  --bs-btn-active-border-color: var(--color-principal-oscuro);
+  --bs-btn-focus-shadow-rgb: 135, 19, 133;
+}
+
+.btn-danger {
+  --bs-btn-bg: #d92d20; /* más oscuro que el rojo del logo para que el texto blanco se lea */
+  --bs-btn-border-color: #d92d20;
+  --bs-btn-hover-bg: #b42318;
+  --bs-btn-hover-border-color: #b42318;
+}
+
+/* Menú y pie */
+.navbar-reparus {
+  background-color: var(--color-principal);
+}
+
+.navbar-reparus .marca {
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+}
+
+.navbar-reparus .marca-tec {
+  color: var(--color-secundario);
+}
+
+.pie-reparus {
+  background-color: var(--color-texto);
+  color: #d5dce6;
+}
+
+/* Estados de una orden (los mismos colores en listados, detalle y avisos) */
+.estado {
+  font-weight: 600;
+  padding: 0.45em 0.8em;
+}
+
+.estado-received {
+  background-color: #6b7280;
+  color: #ffffff;
+}
+
+.estado-diagnosing {
+  background-color: #1e6fd9;
+  color: #ffffff;
+}
+
+.estado-repairing {
+  background-color: #f5a524;
+  color: #1b2a4e;
+}
+
+.estado-ready {
+  background-color: #1f8a4c;
+  color: #ffffff;
+}
+
+.estado-delivered {
+  background-color: #14532d;
+  color: #ffffff;
+}
+
+.estado-cancelled {
+  background-color: #d92d20;
+  color: #ffffff;
+}
