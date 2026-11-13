@@ -62,6 +62,12 @@ const phoneRule = body('phone')
 
 const registerRules = [nameRule, emailRule, passwordRule(), nationalIdRule, phoneRule];
 
+// HU-03: pedir el enlace (solo el formato del correo; no se revisa si existe) y elegir la clave nueva.
+const recoverRules = [
+  body('email').trim().toLowerCase().isEmail().withMessage('Ingresa un correo con formato válido.'),
+];
+const resetRules = [passwordRule()];
+
 // HU-05: mismas reglas del registro (nombre, correo, clave) más el rol del personal.
 const staffRules = [
   nameRule,
@@ -99,6 +105,8 @@ module.exports = {
   phoneRule,
   registerRules,
   staffRules,
+  recoverRules,
+  resetRules,
   loginRules,
   collectErrors,
   matchedData,

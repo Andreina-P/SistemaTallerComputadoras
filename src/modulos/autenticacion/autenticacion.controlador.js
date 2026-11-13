@@ -131,6 +131,64 @@ async function createStaff(req, res) {
   return res.redirect('/admin/usuarios');
 }
 
+// HU-03: pedir el enlace de recuperación. La respuesta es la misma exista o no el correo.
+function showRecover(req, res) {
+  res.render('autenticacion/recuperar', { titulo: 'Recuperar clave', errors: {}, values: {} });
+}
+
+async function recover(req, res) {
+  const { errors, values, hasErrors } = collectErrors(req);
+  if (hasErrors) {
+    return res
+      .status(400)
+      .render('autenticacion/recuperar', { titulo: 'Recuperar clave', errors, values });
+  }
+
+  await authService.requestPasswordReset(req.body.email);
+
+  req.session.flash = {
+    type: 'success',
+    text: 'Si el correo está registrado, te enviamos un enlace para elegir una clave nueva. Vale 30 minutos.',
+  };
+  return res.redirect('/login');
+}
+
+function renderInvalidToken(res) {
+  return res.status(400).render('autenticacion/restablecer', {
+    titulo: 'Enlace no válido',
+    token: null,
+    errors: {},
+  });
+}
+
+async function showReset(req, res) {
+  const row = await authService.findValidRecoveryToken(req.query.token);
+  if (!row) return renderInvalidToken(res);
+
+  return res.render('autenticacion/restablecer', {
+    titulo: 'Nueva clave',
+    token: req.query.token,
+    errors: {},
+  });
+}
+
+async function reset(req, res) {
+  const { errors, hasErrors } = collectErrors(req);
+  const token = req.body.token;
+
+  if (hasErrors) {
+    return res
+      .status(400)
+      .render('autenticacion/restablecer', { titulo: 'Nueva clave', token, errors });
+  }
+
+  const done = await authService.resetPassword(token, req.body.password);
+  if (!done) return renderInvalidToken(res);
+
+  req.session.flash = { type: 'success', text: 'Tu clave se cambió. Ya puedes iniciar sesión.' };
+  return res.redirect('/login');
+}
+
 module.exports = {
   showRegister,
   register,
@@ -139,4 +197,8 @@ module.exports = {
   logout,
   showStaff,
   createStaff,
+  showRecover,
+  recover,
+  showReset,
+  reset,
 };
