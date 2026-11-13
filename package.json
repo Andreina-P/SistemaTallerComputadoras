@@ -19,6 +19,9 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "setupFiles": [
+      "./pruebas/configuracion-pruebas.js"
+    ],
     "testMatch": [
       "**/pruebas/**/*.test.js"
     ]

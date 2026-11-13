@@ -15,6 +15,8 @@ module.exports = {
   nodeEnv,
   port: Number(read('PORT', '3000')),
   sessionSecret,
+  // Intentos fallidos de login permitidos por IP cada 15 minutos
+  loginMaxAttempts: Number(read('LOGIN_MAX_ATTEMPTS', '5')),
   db: {
     host: read('DB_HOST', 'localhost'),
     port: Number(read('DB_PORT', '5432')),
