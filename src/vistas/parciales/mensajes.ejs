@@ -1,0 +1,7 @@
+<%# Mensajes para el usuario. Desde un controlador: res.render('vista', { mensajeExito: '...' }) %>
+<% if (locals.mensajeExito) { %>
+  <div class="alert alert-success" role="alert"><%= mensajeExito %></div>
+<% } %>
+<% if (locals.mensajeError) { %>
+  <div class="alert alert-danger" role="alert"><%= mensajeError %></div>
+<% } %>

@@ -1,0 +1,46 @@
+<%# Menú principal. Los enlaces cambian según el rol; se irán activando con cada ticket (HU-04). %>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-reparus" aria-label="Menú principal">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <img src="/img/logo-icono.svg" alt="" width="36" height="36">
+      <span class="marca">Reparus <span class="marca-tec">Tec</span></span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#menuPrincipal" aria-controls="menuPrincipal"
+            aria-expanded="false" aria-label="Abrir o cerrar el menú">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="menuPrincipal">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="/">Inicio</a></li>
+        <% if (locals.currentUser) { %>
+          <li class="nav-item"><a class="nav-link" href="/ordenes">Órdenes</a></li>
+          <% if (currentUser.role === ROLES.ADMIN || currentUser.role === ROLES.TECHNICIAN) { %>
+            <li class="nav-item"><a class="nav-link" href="/chat/general">Sala general</a></li>
+          <% } %>
+          <% if (currentUser.role === ROLES.ADMIN) { %>
+            <li class="nav-item"><a class="nav-link" href="/clientes">Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" href="/admin/usuarios">Personal</a></li>
+          <% } %>
+          <% if (currentUser.role === ROLES.CUSTOMER) { %>
+            <li class="nav-item"><a class="nav-link" href="/perfil">Mi perfil</a></li>
+          <% } %>
+        <% } %>
+      </ul>
+
+      <% if (locals.currentUser) { %>
+        <span class="navbar-text me-3">
+          <%= currentUser.name %> · <%= roleLabels[currentUser.role] %>
+        </span>
+        <form action="/logout" method="post" class="d-inline">
+          <%# Agregar aquí el token CSRF cuando se implemente la protección (HU-04). %>
+          <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+        </form>
+      <% } else { %>
+        <a class="btn btn-outline-light btn-sm me-2" href="/login">Iniciar sesión</a>
+        <a class="btn btn-light btn-sm" href="/registro">Crear cuenta</a>
+      <% } %>
+    </div>
+  </div>
+</nav>
