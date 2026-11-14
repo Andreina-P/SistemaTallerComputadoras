@@ -1,0 +1,19 @@
+<%#
+  Campo de formulario con etiqueta, validación del navegador y error del servidor.
+  Parámetros: name, label, type (opcional), value (opcional), errors (opcional),
+  atributos (texto con atributos HTML fijos: required, pattern, minlength...), mensaje (texto de ayuda si no cumple).
+%>
+<% const _tipo = locals.type || 'text'; const _valor = (locals.value ?? ''); const _error = locals.errors && locals.errors[name]; %>
+<div class="mb-3">
+  <label for="<%= name %>" class="form-label"><%= label %></label>
+  <input
+    id="<%= name %>"
+    name="<%= name %>"
+    type="<%= _tipo %>"
+    class="form-control<%= _error ? ' is-invalid' : '' %>"
+    <% if (_tipo !== 'password') { %>value="<%= _valor %>"<% } %>
+    <%- locals.atributos || '' %>
+    <% if (locals.mensaje) { %>data-mensaje="<%= mensaje %>"<% } %>
+  >
+  <div class="invalid-feedback"><%= _error || '' %></div>
+</div>

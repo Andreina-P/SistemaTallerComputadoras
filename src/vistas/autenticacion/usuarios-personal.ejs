@@ -1,0 +1,65 @@
+<h1 class="h3 mb-3">Personal del taller</h1>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5">Crear usuario</h2>
+        <form method="post" action="/admin/usuarios" class="needs-validation" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+
+          <%- include('../parciales/campo', {
+            name: 'name', label: 'Nombre completo', value: values.name, errors,
+            atributos: 'required minlength="3" maxlength="80" pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+"',
+            mensaje: 'Usa de 3 a 80 caracteres, solo letras y espacios.'
+          }) %>
+          <%- include('../parciales/campo', {
+            name: 'email', label: 'Correo electrónico', type: 'email', value: values.email, errors,
+            atributos: 'required maxlength="120"',
+            mensaje: 'Ingresa un correo con formato válido.'
+          }) %>
+          <%- include('../parciales/campo', {
+            name: 'password', label: 'Contraseña inicial', type: 'password', errors,
+            atributos: 'required minlength="8" maxlength="72" pattern="(?=.*[A-Za-z])(?=.*\\d).{8,72}" autocomplete="new-password"',
+            mensaje: 'Mínimo 8 caracteres, con al menos una letra y un número.'
+          }) %>
+
+          <div class="mb-3">
+            <label for="role" class="form-label">Rol</label>
+            <select id="role" name="role" class="form-select<%= errors.role ? ' is-invalid' : '' %>" required
+                    data-mensaje="Elige un rol: técnico o administrador.">
+              <option value="">Selecciona un rol</option>
+              <% [ROLES.TECHNICIAN, ROLES.ADMIN].forEach((role) => { %>
+                <option value="<%= role %>" <%= values.role === role ? 'selected' : '' %>><%= roleLabels[role] %></option>
+              <% }) %>
+            </select>
+            <div class="invalid-feedback"><%= errors.role || '' %></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Crear usuario</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <h2 class="h5">Usuarios del personal</h2>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          <% staff.forEach((user) => { %>
+            <tr>
+              <td><%= user.name %></td>
+              <td><%= user.email %></td>
+              <td><%= roleLabels[user.role] %></td>
+              <td><%= user.active ? 'Activo' : 'Inactivo' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

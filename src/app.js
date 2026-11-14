@@ -4,10 +4,15 @@ const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const expressLayouts = require('express-ejs-layouts');
+const cookieParser = require('cookie-parser');
 
 const { ROLES, ROLE_LABELS, STATUS_LABELS, DEVICE_LABELS } = require('./compartido/constantes');
 const { health } = require('./compartido/salud');
 const { notFoundHandler, errorHandler } = require('./compartido/middlewares/errores');
+
+const { sessionMiddleware } = require('./configuracion/sesion');
+const { csrfLocals, csrfProtection } = require('./compartido/middlewares/csrf');
+const { nodeEnv } = require('./configuracion/entorno');
 
 const authRoutes = require('./modulos/autenticacion/autenticacion.rutas');
 const orderRoutes = require('./modulos/ordenes/ordenes.rutas');
@@ -17,6 +22,7 @@ const root = path.join(__dirname, '..');
 const app = express();
 
 app.disable('x-powered-by');
+if (nodeEnv === 'production') app.set('trust proxy', 1); // detrás de un proxy HTTPS, para la cookie secure
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'vistas'));
 app.use(expressLayouts);
@@ -35,14 +41,26 @@ app.use(
   express.static(path.join(root, 'node_modules', '@fontsource', 'poppins')),
 );
 
+// Sesión (PostgreSQL) y protección CSRF. Van después de los archivos estáticos para no crear sesiones por cada imagen.
+app.use(cookieParser());
+app.use(sessionMiddleware);
+app.use(csrfLocals);
+app.use(csrfProtection);
+
 // Variables disponibles en todas las vistas.
-// currentUser lo completará el módulo de autenticación (HU-02) al leer la sesión.
 app.use((req, res, next) => {
   res.locals.currentUser = req.session?.user ?? null;
   res.locals.ROLES = ROLES;
   res.locals.roleLabels = ROLE_LABELS;
   res.locals.statusLabels = STATUS_LABELS;
   res.locals.deviceLabels = DEVICE_LABELS;
+
+  // Mensaje de una sola vez (por ejemplo "Cuenta creada") guardado antes de una redirección.
+  const flash = req.session?.flash;
+  if (flash) {
+    res.locals[flash.type === 'error' ? 'mensajeError' : 'mensajeExito'] = flash.text;
+    delete req.session.flash;
+  }
   next();
 });
 

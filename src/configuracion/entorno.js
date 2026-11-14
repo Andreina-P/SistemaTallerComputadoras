@@ -15,6 +15,10 @@ module.exports = {
   nodeEnv,
   port: Number(read('PORT', '3000')),
   sessionSecret,
+  // Dirección pública de la aplicación (se usa en los enlaces de los correos)
+  appUrl: read('APP_URL', `http://localhost:${read('PORT', '3000')}`),
+  // Intentos fallidos de login permitidos por IP cada 15 minutos
+  loginMaxAttempts: Number(read('LOGIN_MAX_ATTEMPTS', '5')),
   db: {
     host: read('DB_HOST', 'localhost'),
     port: Number(read('DB_PORT', '5432')),

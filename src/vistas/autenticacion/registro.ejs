@@ -1,0 +1,40 @@
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <h1 class="h3 mb-3">Crear cuenta de cliente</h1>
+    <p class="text-secondary">Regístrate para consultar el estado de tus equipos y hablar con el taller.</p>
+
+    <form method="post" action="/registro" class="needs-validation" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+
+      <%- include('../parciales/campo', {
+        name: 'name', label: 'Nombre completo', value: values.name, errors,
+        atributos: 'required minlength="3" maxlength="80" pattern="[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+" autocomplete="name"',
+        mensaje: 'Usa de 3 a 80 caracteres, solo letras y espacios.'
+      }) %>
+      <%- include('../parciales/campo', {
+        name: 'email', label: 'Correo electrónico', type: 'email', value: values.email, errors,
+        atributos: 'required maxlength="120" autocomplete="email"',
+        mensaje: 'Ingresa un correo con formato válido.'
+      }) %>
+      <%- include('../parciales/campo', {
+        name: 'password', label: 'Contraseña', type: 'password', errors,
+        atributos: 'required minlength="8" maxlength="72" pattern="(?=.*[A-Za-z])(?=.*\\d).{8,72}" autocomplete="new-password"',
+        mensaje: 'Mínimo 8 caracteres, con al menos una letra y un número.'
+      }) %>
+      <%- include('../parciales/campo', {
+        name: 'national_id', label: 'Cédula', value: values.national_id, errors,
+        atributos: 'required inputmode="numeric" maxlength="10" pattern="\\d{10}"',
+        mensaje: 'La cédula debe tener 10 dígitos.'
+      }) %>
+      <%- include('../parciales/campo', {
+        name: 'phone', label: 'Teléfono', type: 'tel', value: values.phone, errors,
+        atributos: 'required inputmode="numeric" maxlength="10" pattern="\\d{10}" autocomplete="tel"',
+        mensaje: 'El teléfono debe tener 10 dígitos, solo números.'
+      }) %>
+
+      <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
+    </form>
+
+    <p class="mt-3 text-center">¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
+  </div>
+</div>

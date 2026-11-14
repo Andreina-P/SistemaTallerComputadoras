@@ -1,4 +1,4 @@
-<%# Menú principal. Los enlaces cambian según el rol; se irán activando con cada ticket (HU-04). %>
+<%# Menú principal. Los enlaces cambian según el rol; se activan según el rol de la sesión (HU-04). %>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-reparus" aria-label="Menú principal">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center gap-2" href="/">
@@ -15,7 +15,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link" href="/">Inicio</a></li>
         <% if (locals.currentUser) { %>
-          <li class="nav-item"><a class="nav-link" href="/ordenes">Órdenes</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ordenes"><%= currentUser.role === ROLES.CUSTOMER ? 'Mis órdenes' : 'Órdenes' %></a></li>
           <% if (currentUser.role === ROLES.ADMIN || currentUser.role === ROLES.TECHNICIAN) { %>
             <li class="nav-item"><a class="nav-link" href="/chat/general">Sala general</a></li>
           <% } %>
@@ -34,7 +34,7 @@
           <%= currentUser.name %> · <%= roleLabels[currentUser.role] %>
         </span>
         <form action="/logout" method="post" class="d-inline">
-          <%# Agregar aquí el token CSRF cuando se implemente la protección (HU-04). %>
+          <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
           <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
         </form>
       <% } else { %>
