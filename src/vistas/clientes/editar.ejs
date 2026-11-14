@@ -1,0 +1,41 @@
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/clientes">Clientes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Editar</li>
+      </ol>
+    </nav>
+    <h1 class="h3 mb-3">Editar cliente</h1>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h2 class="h6">Datos de la cuenta</h2>
+        <p class="mb-1"><strong><%= customer.name %></strong></p>
+        <p class="mb-1 text-secondary"><%= customer.email %></p>
+        <p class="mb-0">Cédula: <%= customer.nationalId %> <span class="text-secondary">(no se puede cambiar)</span></p>
+      </div>
+    </div>
+
+    <form method="post" action="/clientes/<%= customer.id %>/editar" class="needs-validation" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+
+      <%- include('../parciales/campo', {
+        name: 'phone', label: 'Teléfono', type: 'tel', value: values.phone, errors,
+        atributos: 'required pattern="\\d{10}" inputmode="numeric" maxlength="10"',
+        mensaje: 'El teléfono debe tener 10 dígitos, solo números.'
+      }) %>
+
+      <%- include('../parciales/campo', {
+        name: 'address', label: 'Dirección (opcional)', type: 'text', value: values.address, errors,
+        atributos: 'maxlength="150"',
+        mensaje: 'La dirección admite máximo 150 caracteres.'
+      }) %>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a class="btn btn-outline-secondary" href="/clientes">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
