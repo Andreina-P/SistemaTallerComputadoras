@@ -1,0 +1,20 @@
+<%#
+  Navegación entre páginas. Parámetros: page, totalPages, baseQuery (texto como "estado=ready&q=ana" sin "pagina").
+%>
+<% if (totalPages > 1) { %>
+  <nav aria-label="Páginas del listado">
+    <ul class="pagination justify-content-center mb-0">
+      <li class="page-item<%= page <= 1 ? ' disabled' : '' %>">
+        <a class="page-link" href="?<%= baseQuery %><%= baseQuery ? '&' : '' %>pagina=<%= page - 1 %>">Anterior</a>
+      </li>
+      <% for (let i = 1; i <= totalPages; i += 1) { %>
+        <li class="page-item<%= i === page ? ' active' : '' %>">
+          <a class="page-link" href="?<%= baseQuery %><%= baseQuery ? '&' : '' %>pagina=<%= i %>"><%= i %></a>
+        </li>
+      <% } %>
+      <li class="page-item<%= page >= totalPages ? ' disabled' : '' %>">
+        <a class="page-link" href="?<%= baseQuery %><%= baseQuery ? '&' : '' %>pagina=<%= page + 1 %>">Siguiente</a>
+      </li>
+    </ul>
+  </nav>
+<% } %>

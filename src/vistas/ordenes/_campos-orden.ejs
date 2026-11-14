@@ -1,0 +1,62 @@
+<%#
+  Campos de la orden compartidos por "Nueva orden" (HU-07) y "Editar orden" (HU-10).
+  Parámetros: values, errors, today.
+%>
+<div class="row g-3">
+  <div class="col-md-4">
+    <label for="device_type" class="form-label">Tipo de equipo</label>
+    <select id="device_type" name="device_type" class="form-select<%= errors.device_type ? ' is-invalid' : '' %>" required
+            data-mensaje="Elige un tipo de equipo.">
+      <option value="">Selecciona</option>
+      <% Object.entries(deviceLabels).forEach(([code, label]) => { %>
+        <option value="<%= code %>" <%= values.device_type === code ? 'selected' : '' %>><%= label %></option>
+      <% }) %>
+    </select>
+    <div class="invalid-feedback"><%= errors.device_type || '' %></div>
+  </div>
+  <div class="col-md-4">
+    <%- include('../parciales/campo', {
+      name: 'brand', label: 'Marca', value: values.brand, errors,
+      atributos: 'required minlength="2" maxlength="40"',
+      mensaje: 'La marca debe tener entre 2 y 40 caracteres.'
+    }) %>
+  </div>
+  <div class="col-md-4">
+    <%- include('../parciales/campo', {
+      name: 'model', label: 'Modelo', value: values.model, errors,
+      atributos: 'required maxlength="60"',
+      mensaje: 'El modelo es obligatorio (máximo 60 caracteres).'
+    }) %>
+  </div>
+  <div class="col-md-6">
+    <%- include('../parciales/campo', {
+      name: 'serial_number', label: 'Número de serie (opcional)', value: values.serial_number, errors,
+      atributos: 'maxlength="40"',
+      mensaje: 'Máximo 40 caracteres.'
+    }) %>
+  </div>
+  <div class="col-md-3">
+    <%- include('../parciales/campo', {
+      name: 'received_at', label: 'Fecha de recepción', type: 'date', value: values.received_at, errors,
+      atributos: 'required max="' + today + '"',
+      mensaje: 'Ingresa una fecha que no sea futura.'
+    }) %>
+  </div>
+  <div class="col-md-3">
+    <%- include('../parciales/campo', {
+      name: 'estimated_cost', label: 'Costo estimado ($)', type: 'number', value: values.estimated_cost, errors,
+      atributos: 'required min="0" max="999999.99" step="0.01"',
+      mensaje: 'Ingresa un número mayor o igual a 0.'
+    }) %>
+  </div>
+  <div class="col-12">
+    <div class="mb-3">
+      <label for="reported_issue" class="form-label">Problema reportado</label>
+      <textarea id="reported_issue" name="reported_issue" rows="4"
+                class="form-control<%= errors.reported_issue ? ' is-invalid' : '' %>"
+                required minlength="10" maxlength="500"
+                data-mensaje="Describe el problema en 10 a 500 caracteres."><%= values.reported_issue || '' %></textarea>
+      <div class="invalid-feedback"><%= errors.reported_issue || '' %></div>
+    </div>
+  </div>
+</div>

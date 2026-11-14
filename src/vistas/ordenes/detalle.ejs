@@ -1,0 +1,102 @@
+<% const isStaff = currentUser.role !== ROLES.CUSTOMER; %>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/ordenes"><%= isStaff ? 'Órdenes' : 'Mis órdenes' %></a></li>
+    <li class="breadcrumb-item active" aria-current="page"><%= order.orderNumber %></li>
+  </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">
+    Orden <%= order.orderNumber %>
+    <span class="badge estado estado-<%= order.status %> ms-2"><%= statusLabels[order.status] %></span>
+  </h1>
+  <% if (currentUser.role === ROLES.ADMIN) { %>
+    <div class="d-flex gap-2">
+      <% if (order.status !== 'delivered' && order.status !== 'cancelled') { %>
+        <a class="btn btn-outline-primary" href="/ordenes/<%= order.id %>/editar">Editar</a>
+      <% } %>
+      <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalEliminar">
+        Eliminar
+      </button>
+    </div>
+  <% } %>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h2 class="h6">Equipo</h2>
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Tipo</dt><dd class="col-sm-8"><%= deviceLabels[order.deviceType] %></dd>
+          <dt class="col-sm-4">Marca y modelo</dt><dd class="col-sm-8"><%= order.brand %> <%= order.model %></dd>
+          <dt class="col-sm-4">Número de serie</dt><dd class="col-sm-8"><%= order.serialNumber || 'No registrado' %></dd>
+          <dt class="col-sm-4">Recibida el</dt><dd class="col-sm-8"><%= format.formatDate(order.receivedAt) %></dd>
+          <dt class="col-sm-4">Costo estimado</dt><dd class="col-sm-8"><%= format.formatMoney(order.estimatedCost) %></dd>
+          <dt class="col-sm-4">Problema reportado</dt><dd class="col-sm-8"><%= order.reportedIssue %></dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6">Cliente y técnico</h2>
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8"><%= customer.name %></dd>
+          <% if (isStaff) { %>
+            <dt class="col-sm-4">Cédula</dt><dd class="col-sm-8"><%= customer.nationalId %></dd>
+            <dt class="col-sm-4">Teléfono</dt><dd class="col-sm-8"><%= customer.phone %></dd>
+            <dt class="col-sm-4">Correo</dt><dd class="col-sm-8"><%= customer.email %></dd>
+          <% } %>
+          <dt class="col-sm-4">Técnico</dt><dd class="col-sm-8"><%= technicianName || 'Sin asignar' %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6">Historial de estados</h2>
+        <ul class="list-unstyled mb-0">
+          <% history.forEach((entry) => { %>
+            <li class="mb-3 pb-3 border-bottom">
+              <span class="badge estado estado-<%= entry.newStatus %>"><%= statusLabels[entry.newStatus] %></span>
+              <% if (isStaff && !entry.customerVisible) { %>
+                <span class="badge text-bg-secondary">Nota interna</span>
+              <% } %>
+              <div class="small text-secondary mt-1">
+                <%= format.formatDateTime(entry.createdAt) %> · <%= entry.authorName %>
+              </div>
+              <% if (entry.comment) { %><div class="mt-1"><%= entry.comment %></div><% } %>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (currentUser.role === ROLES.ADMIN) { %>
+  <div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="tituloEliminar" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" method="post" action="/ordenes/<%= order.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+        <input type="hidden" name="_method" value="DELETE">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="tituloEliminar">Eliminar orden</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          ¿Seguro que quieres eliminar la orden <strong><%= order.orderNumber %></strong>?
+          Se borrarán también su historial y sus mensajes. Esta acción no se puede deshacer.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+<% } %>

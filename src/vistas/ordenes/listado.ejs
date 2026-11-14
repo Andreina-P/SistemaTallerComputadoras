@@ -1,0 +1,73 @@
+<%
+  const params = new URLSearchParams();
+  if (filters.status) params.set('estado', filters.status);
+  if (filters.q) params.set('q', filters.q);
+  const baseQuery = params.toString();
+  const isCustomer = currentUser.role === ROLES.CUSTOMER;
+%>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0"><%= titulo %></h1>
+  <% if (currentUser.role === ROLES.ADMIN) { %>
+    <a class="btn btn-primary" href="/ordenes/nueva">Nueva orden</a>
+  <% } %>
+</div>
+
+<form method="get" action="/ordenes" class="row g-2 mb-3">
+  <div class="col-md-5">
+    <label for="q" class="visually-hidden">Buscar</label>
+    <input id="q" name="q" type="search" class="form-control" maxlength="80"
+           placeholder="<%= isCustomer ? 'Número de orden' : 'Número de orden, nombre o cédula del cliente' %>"
+           value="<%= filters.q %>">
+  </div>
+  <div class="col-md-4">
+    <label for="estado" class="visually-hidden">Estado</label>
+    <select id="estado" name="estado" class="form-select">
+      <option value="">Todos los estados</option>
+      <% Object.entries(statusLabels).forEach(([code, label]) => { %>
+        <option value="<%= code %>" <%= filters.status === code ? 'selected' : '' %>><%= label %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="col-md-3 d-flex gap-2">
+    <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
+    <a class="btn btn-outline-secondary" href="/ordenes">Limpiar</a>
+  </div>
+</form>
+
+<% if (orders.length === 0) { %>
+  <div class="alert alert-info">No hay órdenes que coincidan.</div>
+<% } else { %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>N.º de orden</th>
+          <% if (!isCustomer) { %><th>Cliente</th><% } %>
+          <th>Equipo</th>
+          <th>Recibida</th>
+          <% if (currentUser.role === ROLES.ADMIN) { %><th>Técnico</th><% } %>
+          <th>Estado</th>
+          <th class="text-end">Costo est.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach((order) => { %>
+          <tr>
+            <td><a href="/ordenes/<%= order.id %>" class="fw-semibold"><%= order.orderNumber %></a></td>
+            <% if (!isCustomer) { %><td><%= order.customerName %></td><% } %>
+            <td><%= deviceLabels[order.deviceType] %> · <%= order.brand %> <%= order.model %></td>
+            <td><%= format.formatDate(order.receivedAt) %></td>
+            <% if (currentUser.role === ROLES.ADMIN) { %>
+              <td><%= order.technicianName || 'Sin asignar' %></td>
+            <% } %>
+            <td><span class="badge estado estado-<%= order.status %>"><%= statusLabels[order.status] %></span></td>
+            <td class="text-end"><%= format.formatMoney(order.estimatedCost) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-secondary small"><%= total %> orden(es) · página <%= page %> de <%= totalPages %></p>
+  <%- include('../parciales/paginacion', { page, totalPages, baseQuery }) %>
+<% } %>
