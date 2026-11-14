@@ -22,7 +22,7 @@
   <%- include('parciales/pie') %>
 
   <% if (locals.currentUser) { %>
-    <div id="avisos" class="toast-container position-fixed top-0 end-0 p-3" aria-live="polite" aria-atomic="true"></div>
+    <div id="avisos" data-usuario="<%= currentUser.id %>" class="toast-container position-fixed top-0 end-0 p-3" aria-live="polite" aria-atomic="true"></div>
   <% } %>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
