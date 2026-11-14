@@ -71,16 +71,67 @@ async function listOrders(req, res) {
   });
 }
 
-// HU-09: una orden ajena responde 404 igual que una que no existe.
-async function showOrder(req, res, next) {
-  const detail = await orderService.getOrderDetail(req.session.user, req.params.id);
-  if (!detail) return next();
+// Muestra el detalle de una orden. Lo usan HU-09 y HU-11 (cuando un cambio de estado se rechaza,
+// se vuelve a mostrar la misma pantalla con el motivo). Devuelve false si el usuario no puede verla.
+async function renderDetail(req, res, { status = 200, mensajeError, values = {} } = {}) {
+  const user = req.session.user;
+  const detail = await orderService.getOrderDetail(user, req.params.id);
+  if (!detail) return false;
 
-  return res.render('ordenes/detalle', {
+  res.status(status).render('ordenes/detalle', {
     titulo: detail.order.orderNumber,
     ...detail,
+    nextStatuses: orderService.nextStatusesFor(user, detail.order),
+    values,
+    mensajeError,
     format,
   });
+  return true;
+}
+
+// HU-09: una orden ajena responde 404 igual que una que no existe.
+async function showOrder(req, res, next) {
+  if (!(await renderDetail(req, res))) return next();
+  return undefined;
+}
+
+// HU-11: cambiar el estado. El servicio aplica el flujo y las reglas; aquí solo se traduce el
+// resultado a una respuesta. Cuando haya avisos en tiempo real (HU-12) se emiten aquí abajo,
+// después de que el servicio guardó el cambio.
+const STATUS_ERROR_HTTP = {
+  FORBIDDEN_STATUS: 403,
+  INVALID_TRANSITION: 409,
+  MISSING_REQUIREMENT: 400,
+};
+
+async function changeStatus(req, res, next) {
+  const { errors, values, hasErrors } = collectErrors(req);
+  if (hasErrors) {
+    const message = Object.values(errors)[0];
+    if (!(await renderDetail(req, res, { status: 400, mensajeError: message, values })))
+      return next();
+    return undefined;
+  }
+
+  try {
+    const { order } = await orderService.changeOrderStatus(req.session.user, req.params.id, {
+      newStatus: req.body.new_status,
+      comment: req.body.comment,
+      customerVisible: req.body.customer_visible,
+    });
+    req.session.flash = {
+      type: 'success',
+      text: `Estado actualizado a ${res.locals.statusLabels[order.status]}.`,
+    };
+    return res.redirect(`/ordenes/${order.id}`);
+  } catch (error) {
+    if (error.code === 'ORDER_NOT_FOUND') return next();
+    const httpStatus = STATUS_ERROR_HTTP[error.code];
+    if (!httpStatus) throw error;
+
+    await renderDetail(req, res, { status: httpStatus, mensajeError: error.message, values });
+    return undefined;
+  }
 }
 
 function lockedResponse(res) {
@@ -170,6 +221,7 @@ module.exports = {
   createOrder,
   listOrders,
   showOrder,
+  changeStatus,
   showEdit,
   updateOrder,
   deleteOrder,

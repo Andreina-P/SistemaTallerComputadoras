@@ -11,8 +11,8 @@
 //   GET/POST  /perfil               HU-16  Perfil del cliente
 const express = require('express');
 const controller = require('./ordenes.controlador');
-const { createOrderRules, editOrderRules } = require('./ordenes.validaciones');
-const { requireAuth, requireAdmin } = require('../../compartido/middlewares/sesion');
+const { createOrderRules, editOrderRules, changeStatusRules } = require('./ordenes.validaciones');
+const { requireAuth, requireAdmin, requireStaff } = require('../../compartido/middlewares/sesion');
 
 const router = express.Router();
 
@@ -31,6 +31,15 @@ router.get('/ordenes/clientes/buscar', requireAuth, requireAdmin, controller.sea
 // HU-08 y HU-09: cada rol ve solo lo suyo (lo decide ordenes.servicio.js).
 router.get('/ordenes', requireAuth, controller.listOrders);
 router.get('/ordenes/:id', requireAuth, controller.showOrder);
+
+// HU-11: administrador y técnico; el servicio exige además que el técnico tenga la orden asignada.
+router.post(
+  '/ordenes/:id/estado',
+  requireAuth,
+  requireStaff,
+  changeStatusRules,
+  controller.changeStatus,
+);
 
 // HU-10: solo el administrador edita, asigna técnico y elimina.
 router.get('/ordenes/:id/editar', requireAuth, requireAdmin, controller.showEdit);
