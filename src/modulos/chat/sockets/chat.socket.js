@@ -4,6 +4,8 @@
 // una función que recibe { ok: true, ... } o { ok: false, error: 'CÓDIGO' }.
 //   order:join       { orderId }            Unirse al chat de una orden; devuelve historial y conectados
 //   order:leave      { orderId }            Salir del chat de una orden
+//   general:join     {}                     Unirse a la sala general (solo administradores y técnicos)
+//   general:leave    {}                     Salir de la sala general
 //   message:new      { scope, orderId?, text }  Enviar un mensaje; el servidor lo guarda y luego lo reenvía a la sala
 //   presence:update  { scope, orderId?, users }  (servidor) Cambió quién está conectado en la sala
 //
@@ -11,10 +13,15 @@
 // una sala: pide unirse y el servidor decide, consultando la base de datos, según el rol y la orden.
 const orderService = require('../../ordenes/ordenes.servicio');
 const chatService = require('../chat.servicio');
-const { orderRoom } = require('../../../compartido/utilidades/salas');
+const { orderRoom, GENERAL_ROOM } = require('../../../compartido/utilidades/salas');
+const { ROLES } = require('../../../compartido/constantes');
+
+// La sala general es solo para el personal del taller (HU-14).
+const canUseGeneralRoom = (user) => [ROLES.ADMIN, ROLES.TECHNICIAN].includes(user.role);
 
 // Convierte el nombre de una sala en los datos del evento, o null si no es una sala de chat.
 function describeRoom(room) {
+  if (room === GENERAL_ROOM) return { scope: 'general' };
   const match = /^order:(\d+)$/.exec(room);
   return match ? { scope: 'order', orderId: Number(match[1]) } : null;
 }
@@ -91,20 +98,53 @@ module.exports = function registerChat(io) {
       return announcePresence(io, room);
     });
 
+    on('general:join', async (payload, reply) => {
+      // Los clientes no entran: su conversación con el taller es el chat de cada orden.
+      if (!canUseGeneralRoom(user)) return reply({ ok: false, error: 'FORBIDDEN' });
+
+      await socket.join(GENERAL_ROOM);
+      const [history, users] = await Promise.all([
+        chatService.loadHistory(null),
+        listPresence(io, GENERAL_ROOM),
+      ]);
+      reply({ ok: true, readOnly: false, history, users });
+      return announcePresence(io, GENERAL_ROOM);
+    });
+
+    on('general:leave', async (payload, reply) => {
+      await socket.leave(GENERAL_ROOM);
+      reply({ ok: true });
+      return announcePresence(io, GENERAL_ROOM);
+    });
+
     on('message:new', async (payload, reply) => {
-      const orderId = parseOrderId(payload);
-      if (payload?.scope !== 'order' || !orderId) return reply({ ok: false, error: 'INVALID' });
+      let room;
+      let orderId = null;
 
-      const room = orderRoom(orderId);
-      if (!socket.rooms.has(room)) return reply({ ok: false, error: 'NOT_JOINED' });
+      if (payload?.scope === 'general') {
+        room = GENERAL_ROOM;
+        if (!socket.rooms.has(room)) return reply({ ok: false, error: 'NOT_JOINED' });
+        if (!canUseGeneralRoom(user)) {
+          await socket.leave(room);
+          return reply({ ok: false, error: 'FORBIDDEN' });
+        }
+      } else if (payload?.scope === 'order') {
+        orderId = parseOrderId(payload);
+        if (!orderId) return reply({ ok: false, error: 'INVALID' });
 
-      // El acceso se vuelve a verificar en cada mensaje: la orden pudo reasignarse o cerrarse después de unirse.
-      const access = await orderService.getOrderChatAccess(user, orderId);
-      if (!access) {
-        await socket.leave(room);
-        return reply({ ok: false, error: 'FORBIDDEN' });
+        room = orderRoom(orderId);
+        if (!socket.rooms.has(room)) return reply({ ok: false, error: 'NOT_JOINED' });
+
+        // El acceso se vuelve a verificar en cada mensaje: la orden pudo reasignarse o cerrarse después de unirse.
+        const access = await orderService.getOrderChatAccess(user, orderId);
+        if (!access) {
+          await socket.leave(room);
+          return reply({ ok: false, error: 'FORBIDDEN' });
+        }
+        if (access.readOnly) return reply({ ok: false, error: 'READ_ONLY' });
+      } else {
+        return reply({ ok: false, error: 'INVALID' });
       }
-      if (access.readOnly) return reply({ ok: false, error: 'READ_ONLY' });
 
       const checked = chatService.validateMessage(payload.text);
       if (!checked.ok) return reply({ ok: false, error: checked.error });
@@ -115,7 +155,7 @@ module.exports = function registerChat(io) {
         userId: user.id,
         text: checked.text,
       });
-      io.to(room).emit('message:new', { scope: 'order', ...message });
+      io.to(room).emit('message:new', { scope: payload.scope, ...message });
       return reply({ ok: true });
     });
 
