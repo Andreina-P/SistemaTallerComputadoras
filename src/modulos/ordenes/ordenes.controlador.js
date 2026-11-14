@@ -1,7 +1,9 @@
 // Controlador de órdenes y clientes: recibe la petición, llama al servicio y responde.
 const orderService = require('./ordenes.servicio');
 const { collectErrors } = require('./ordenes.validaciones');
-const { todayIso } = require('../../compartido/utilidades/formato');
+const format = require('../../compartido/utilidades/formato');
+
+const { todayIso } = format;
 
 function renderNewOrder(res, { status = 200, errors = {}, values = {} } = {}) {
   return res.status(status).render('ordenes/nueva', {
@@ -46,7 +48,37 @@ async function createOrder(req, res) {
   );
 
   req.session.flash = { type: 'success', text: `Orden ${order.orderNumber} creada.` };
-  return res.redirect('/ordenes/nueva');
+  return res.redirect(`/ordenes/${order.id}`);
 }
 
-module.exports = { showNewOrder, searchCustomer, createOrder };
+// HU-08
+async function listOrders(req, res) {
+  const status = typeof req.query.estado === 'string' ? req.query.estado : '';
+  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  const result = await orderService.listOrders(req.session.user, {
+    page: req.query.pagina,
+    status,
+    q,
+  });
+
+  return res.render('ordenes/listado', {
+    titulo: req.session.user.role === 'customer' ? 'Mis órdenes' : 'Órdenes',
+    ...result,
+    filters: { status, q },
+    format,
+  });
+}
+
+// HU-09: una orden ajena responde 404 igual que una que no existe.
+async function showOrder(req, res, next) {
+  const detail = await orderService.getOrderDetail(req.session.user, req.params.id);
+  if (!detail) return next();
+
+  return res.render('ordenes/detalle', {
+    titulo: detail.order.orderNumber,
+    ...detail,
+    format,
+  });
+}
+
+module.exports = { showNewOrder, searchCustomer, createOrder, listOrders, showOrder };

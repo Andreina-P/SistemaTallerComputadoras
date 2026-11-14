@@ -53,6 +53,7 @@ describe('HU-07 Crear orden', () => {
     const agent = await loginAgent(app, admin.user.email);
     const res = await postOrder(agent, validOrder());
     expect(res.status).toBe(302);
+    expect(res.headers.location).toMatch(/^\/ordenes\/\d+$/);
 
     const order = await Order.findOne({
       where: { customerId: customer.customer.id },

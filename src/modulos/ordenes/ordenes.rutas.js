@@ -1,4 +1,4 @@
-// Rutas del módulo de órdenes:
+// Rutas del módulo de órdenes.
 //
 //   GET       /ordenes              HU-08  Listado con filtro, búsqueda y paginación
 //   GET/POST  /ordenes/nueva        HU-07  Crear orden
@@ -19,5 +19,9 @@ const router = express.Router();
 router.get('/ordenes/nueva', requireAuth, requireAdmin, controller.showNewOrder);
 router.post('/ordenes/nueva', requireAuth, requireAdmin, createOrderRules, controller.createOrder);
 router.get('/ordenes/clientes/buscar', requireAuth, requireAdmin, controller.searchCustomer);
+
+// HU-08 y HU-09: cada rol ve solo lo suyo (lo decide ordenes.servicio.js).
+router.get('/ordenes', requireAuth, controller.listOrders);
+router.get('/ordenes/:id', requireAuth, controller.showOrder);
 
 module.exports = router;
