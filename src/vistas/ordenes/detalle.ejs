@@ -116,6 +116,10 @@
   </div>
 </div>
 
+<div class="mt-4">
+  <%- include('../chat/panel-chat', { scope: 'order', orderId: order.id, title: 'Chat de la orden' }) %>
+</div>
+
 <% if (currentUser.role === ROLES.ADMIN) { %>
   <div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="tituloEliminar" aria-hidden="true">
     <div class="modal-dialog">

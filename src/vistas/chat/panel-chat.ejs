@@ -1,0 +1,23 @@
+<%#
+  Panel de chat en tiempo real (lo maneja publico/js/chat.js).
+  Parámetros: scope ('order' o 'general'), title, orderId (solo con scope 'order').
+%>
+<section id="chat" class="card" aria-label="<%= title %>"
+         data-chat-scope="<%= scope %>"
+         <% if (scope === 'order') { %>data-chat-order-id="<%= orderId %>"<% } %>
+         data-user-id="<%= currentUser.id %>">
+  <div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+      <h2 class="h6 mb-0"><%= title %></h2>
+      <small class="text-secondary" id="chat-conectados" aria-live="polite"></small>
+    </div>
+    <div id="chat-estado" class="small text-secondary mb-2" role="status">Conectando...</div>
+    <ul id="chat-lista" class="chat-lista list-unstyled mb-2" aria-live="polite" aria-label="Mensajes"></ul>
+    <form id="chat-formulario" class="d-flex gap-2" autocomplete="off">
+      <label for="chat-texto" class="visually-hidden">Mensaje</label>
+      <input id="chat-texto" class="form-control" maxlength="500" required placeholder="Escribe un mensaje">
+      <button type="submit" class="btn btn-primary">Enviar</button>
+    </form>
+  </div>
+</section>
+<script src="/js/chat.js"></script>
