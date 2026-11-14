@@ -114,7 +114,7 @@ describe('HU-05 Crear usuarios del personal', () => {
     return agent
       .post('/admin/usuarios')
       .type('form')
-      .send({ ...data, _csrf: token });
+      .send({ password_confirm: data.password, ...data, _csrf: token });
   }
 
   test('el administrador crea un técnico y un administrador', async () => {
@@ -170,6 +170,22 @@ describe('HU-05 Crear usuarios del personal', () => {
     });
     expect(repeated.status).toBe(400);
     expect(repeated.text).toContain('Este correo ya está registrado.');
+  });
+
+  test('rechaza si la contraseña repetida no coincide', async () => {
+    const agent = await loginAs('admin');
+    const email = uniqueEmail();
+    const res = await postStaff(agent, {
+      name: 'Personal Nuevo',
+      email,
+      password: PASSWORD,
+      password_confirm: 'Distinta123',
+      role: 'technician',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.text).toContain('Las contraseñas no coinciden.');
+    expect(await User.count({ where: { email } })).toBe(0);
   });
 
   test('solo el administrador puede enviar el formulario (los demás reciben 403)', async () => {

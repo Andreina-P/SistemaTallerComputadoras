@@ -92,6 +92,24 @@ describe('HU-01 Registro de cliente', () => {
     expect(await User.count({ where: { email: data.email } })).toBe(0);
   });
 
+  test('rechaza si la contraseña repetida no coincide', async () => {
+    const data = validCustomerData({ password_confirm: 'OtraClave99' });
+    const res = await postRegister(request.agent(app), data);
+
+    expect(res.status).toBe(400);
+    expect(res.text).toContain('Las contraseñas no coinciden.');
+    expect(await User.count({ where: { email: data.email } })).toBe(0);
+  });
+
+  test('rechaza si falta repetir la contraseña', async () => {
+    const data = validCustomerData();
+    delete data.password_confirm;
+    const res = await postRegister(request.agent(app), data);
+
+    expect(res.status).toBe(400);
+    expect(res.text).toContain('Las contraseñas no coinciden.');
+  });
+
   test('sin token CSRF el formulario se rechaza con 403', async () => {
     const res = await request(app).post('/registro').type('form').send(validCustomerData());
     expect(res.status).toBe(403);

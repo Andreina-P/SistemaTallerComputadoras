@@ -43,6 +43,12 @@ const passwordRule = (field = 'password') =>
     .matches(/\d/)
     .withMessage('La contraseña debe incluir al menos un número.');
 
+// Confirmación: el campo "Repite la contraseña" debe ser igual al de la contraseña.
+const passwordConfirmRule = (field = 'password', confirmField = 'password_confirm') =>
+  body(confirmField)
+    .custom((value, { req }) => value === req.body[field])
+    .withMessage('Las contraseñas no coinciden.');
+
 const nationalIdRule = body('national_id')
   .trim()
   .matches(/^\d{10}$/)
@@ -60,19 +66,27 @@ const phoneRule = body('phone')
   .matches(/^\d{10}$/)
   .withMessage('El teléfono debe tener 10 dígitos, solo números.');
 
-const registerRules = [nameRule, emailRule, passwordRule(), nationalIdRule, phoneRule];
+const registerRules = [
+  nameRule,
+  emailRule,
+  passwordRule(),
+  passwordConfirmRule(),
+  nationalIdRule,
+  phoneRule,
+];
 
 // HU-03: pedir el enlace (solo el formato del correo; no se revisa si existe) y elegir la clave nueva.
 const recoverRules = [
   body('email').trim().toLowerCase().isEmail().withMessage('Ingresa un correo con formato válido.'),
 ];
-const resetRules = [passwordRule()];
+const resetRules = [passwordRule(), passwordConfirmRule()];
 
 // HU-05: mismas reglas del registro (nombre, correo, clave) más el rol del personal.
 const staffRules = [
   nameRule,
   emailRule,
   passwordRule(),
+  passwordConfirmRule(),
   body('role')
     .isIn([ROLES.TECHNICIAN, ROLES.ADMIN])
     .withMessage('Elige un rol: técnico o administrador.'),
@@ -101,6 +115,7 @@ module.exports = {
   nameRule,
   emailRule,
   passwordRule,
+  passwordConfirmRule,
   nationalIdRule,
   phoneRule,
   registerRules,

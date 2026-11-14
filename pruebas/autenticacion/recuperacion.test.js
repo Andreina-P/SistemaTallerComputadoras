@@ -43,12 +43,15 @@ async function requestToken() {
   return text.match(/token=([a-f0-9]{64})/)[1];
 }
 
-async function submitNewPassword(token, password = NEW_PASSWORD) {
+async function submitNewPassword(token, password = NEW_PASSWORD, confirm = password) {
   const agent = request.agent(app);
   const csrf = await csrfFrom(agent, `/restablecer?token=${token}`).catch(() =>
     csrfFrom(agent, '/recuperar'),
   );
-  return agent.post('/restablecer').type('form').send({ token, password, _csrf: csrf });
+  return agent
+    .post('/restablecer')
+    .type('form')
+    .send({ token, password, password_confirm: confirm, _csrf: csrf });
 }
 
 describe('HU-03 Recuperación de clave', () => {
@@ -130,6 +133,17 @@ describe('HU-03 Recuperación de clave', () => {
 
     // el token sigue sirviendo porque la clave no se cambió
     const ok = await submitNewPassword(token, 'ClaveValida1');
+    expect(ok.status).toBe(302);
+  });
+
+  test('si la contraseña repetida no coincide no se cambia y el token sigue sirviendo', async () => {
+    const token = await requestToken();
+    const res = await submitNewPassword(token, 'ClaveRepetida7', 'ClaveDistinta8');
+    expect(res.status).toBe(400);
+    expect(res.text).toContain('Las contraseñas no coinciden.');
+    expect(await authService.authenticate(user.email, 'ClaveRepetida7')).toBeNull();
+
+    const ok = await submitNewPassword(token, 'ClaveRepetida7');
     expect(ok.status).toBe(302);
   });
 

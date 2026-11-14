@@ -1,7 +1,7 @@
 // Reglas de validación del servidor para órdenes (express-validator):
 // longitudes, fecha no futura, costo mayor o igual a 0 y listas cerradas de tipo de equipo.
 const { body, validationResult } = require('express-validator');
-const { DEVICE_TYPES } = require('../../compartido/constantes');
+const { DEVICE_TYPES, ORDER_STATUS } = require('../../compartido/constantes');
 const { todayIso } = require('../../compartido/utilidades/formato');
 const orderService = require('./ordenes.servicio');
 const usersService = require('../autenticacion/usuarios.servicio');
@@ -73,6 +73,18 @@ const editOrderRules = [
     }),
 ];
 
+// HU-11: estado nuevo, comentario (máximo 300 caracteres) y si el cliente puede verlo.
+// Las reglas del flujo (transiciones, técnico, costo...) las aplica el servicio.
+const changeStatusRules = [
+  body('new_status').isIn(Object.values(ORDER_STATUS)).withMessage('Elige un estado válido.'),
+  body('comment')
+    .optional()
+    .trim()
+    .isLength({ max: 300 })
+    .withMessage('El comentario admite máximo 300 caracteres.'),
+  body('customer_visible').toBoolean(),
+];
+
 // Devuelve { errors: { campo: 'mensaje' }, values, hasErrors } para volver a mostrar el formulario.
 function collectErrors(req) {
   const result = validationResult(req);
@@ -83,4 +95,10 @@ function collectErrors(req) {
   return { errors, values: req.body, hasErrors: !result.isEmpty() };
 }
 
-module.exports = { orderFieldRules, createOrderRules, editOrderRules, collectErrors };
+module.exports = {
+  orderFieldRules,
+  createOrderRules,
+  editOrderRules,
+  changeStatusRules,
+  collectErrors,
+};
