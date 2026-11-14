@@ -1,0 +1,60 @@
+<%
+  const params = new URLSearchParams();
+  if (filters.q) params.set('q', filters.q);
+  const baseQuery = params.toString();
+%>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0"><%= titulo %></h1>
+</div>
+
+<form method="get" action="/clientes" class="row g-2 mb-3">
+  <div class="col-md-9">
+    <label for="q" class="visually-hidden">Buscar</label>
+    <input id="q" name="q" type="search" class="form-control" maxlength="80"
+           placeholder="Nombre o cédula del cliente" value="<%= filters.q %>">
+  </div>
+  <div class="col-md-3 d-flex gap-2">
+    <button type="submit" class="btn btn-primary flex-grow-1">Buscar</button>
+    <a class="btn btn-outline-secondary" href="/clientes">Limpiar</a>
+  </div>
+</form>
+
+<% if (customers.length === 0) { %>
+  <div class="alert alert-info">No hay clientes que coincidan.</div>
+<% } else { %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Cédula</th>
+          <th>Teléfono</th>
+          <th class="text-end">Órdenes</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% customers.forEach((customer) => { %>
+          <tr>
+            <td><%= customer.name %></td>
+            <td><%= customer.email %></td>
+            <td><%= customer.nationalId %></td>
+            <td><%= customer.phone %></td>
+            <td class="text-end">
+              <% if (customer.orderCount > 0) { %>
+                <a href="/ordenes?q=<%= customer.nationalId %>"><%= customer.orderCount %></a>
+              <% } else { %>0<% } %>
+            </td>
+            <td class="text-end">
+              <a class="btn btn-outline-primary btn-sm" href="/clientes/<%= customer.id %>/editar">Editar</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-secondary small"><%= total %> cliente(s) · página <%= page %> de <%= totalPages %></p>
+  <%- include('../parciales/paginacion', { page, totalPages, baseQuery }) %>
+<% } %>

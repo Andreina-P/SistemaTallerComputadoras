@@ -10,6 +10,7 @@ const Customer = require('./cliente.modelo');
 const StatusHistory = require('./historialEstado.modelo');
 const { ORDER_STATUS, ROLES, ALLOWED_TRANSITIONS } = require('../../compartido/constantes');
 const usersService = require('../autenticacion/usuarios.servicio');
+const { escapeLike } = require('../../compartido/utilidades/texto');
 
 const MAX_NUMBER_RETRIES = 3;
 const PAGE_SIZE = 10;
@@ -101,11 +102,6 @@ async function accessFilter(user) {
     return customer ? { customerId: customer.id } : null;
   }
   return null;
-}
-
-// Escapa % y _ para que el texto buscado se tome literalmente en un LIKE.
-function escapeLike(text) {
-  return text.replace(/[\\%_]/g, (character) => `\\${character}`);
 }
 
 // HU-08: listado paginado (10 por página) con filtro por estado y búsqueda por número de orden,

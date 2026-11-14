@@ -7,7 +7,7 @@
 //   GET/POST  /ordenes/:id/editar   HU-10  Editar y asignar técnico
 //   DELETE    /ordenes/:id          HU-10  Eliminar con confirmación
 //   POST      /ordenes/:id/estado   HU-11  Cambiar el estado
-//   GET       /clientes             HU-06  Consultar y editar clientes
+//   GET       /clientes             HU-06  Consultar y editar clientes (ver clientes.rutas.js)
 //   GET/POST  /perfil               HU-16  Perfil del cliente
 const express = require('express');
 const controller = require('./ordenes.controlador');
@@ -51,5 +51,8 @@ router.post(
   controller.updateOrder,
 );
 router.delete('/ordenes/:id', requireAuth, requireAdmin, controller.deleteOrder);
+
+// HU-06: clientes (listado y edición, solo administrador)
+router.use(require('./clientes.rutas'));
 
 module.exports = router;
