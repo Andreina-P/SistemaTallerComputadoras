@@ -1,5 +1,7 @@
 // Controlador de órdenes y clientes: recibe la petición, llama al servicio y responde.
+// No pongas aquí la lógica de negocio; va en ordenes.servicio.js.
 const orderService = require('./ordenes.servicio');
+const usersService = require('../autenticacion/usuarios.servicio');
 const { collectErrors } = require('./ordenes.validaciones');
 const format = require('../../compartido/utilidades/formato');
 
@@ -81,4 +83,94 @@ async function showOrder(req, res, next) {
   });
 }
 
-module.exports = { showNewOrder, searchCustomer, createOrder, listOrders, showOrder };
+function lockedResponse(res) {
+  return res.status(409).render('error', {
+    titulo: 'Orden bloqueada',
+    status: 409,
+    mensaje: 'Una orden Entregada o Cancelada no se puede editar.',
+  });
+}
+
+async function renderEdit(res, { found, status = 200, errors = {}, values }) {
+  const technicians = await usersService.listTechnicians();
+  return res.status(status).render('ordenes/editar', {
+    titulo: `Editar ${found.order.orderNumber}`,
+    order: found.order.toJSON(),
+    customerName: found.customerName,
+    technicians,
+    errors,
+    values,
+    today: todayIso(),
+  });
+}
+
+// HU-10
+async function showEdit(req, res, next) {
+  const found = await orderService.findOrderForEdit(req.params.id);
+  if (!found) return next();
+  if (found.locked) return lockedResponse(res);
+
+  const order = found.order;
+  return renderEdit(res, {
+    found,
+    values: {
+      device_type: order.deviceType,
+      brand: order.brand,
+      model: order.model,
+      serial_number: order.serialNumber ?? '',
+      reported_issue: order.reportedIssue,
+      received_at: order.receivedAt,
+      estimated_cost: Number(order.estimatedCost).toFixed(2),
+      technician_id: order.technicianId ?? '',
+    },
+  });
+}
+
+// HU-10
+async function updateOrder(req, res, next) {
+  const found = await orderService.findOrderForEdit(req.params.id);
+  if (!found) return next();
+  if (found.locked) return lockedResponse(res);
+
+  const { errors, values, hasErrors } = collectErrors(req);
+  if (hasErrors) return renderEdit(res, { found, status: 400, errors, values });
+
+  try {
+    await orderService.updateOrder(req.params.id, {
+      deviceType: req.body.device_type,
+      brand: req.body.brand,
+      model: req.body.model,
+      serialNumber: req.body.serial_number,
+      reportedIssue: req.body.reported_issue,
+      receivedAt: req.body.received_at,
+      estimatedCost: Number(req.body.estimated_cost),
+      technicianId: req.body.technician_id ? Number(req.body.technician_id) : null,
+    });
+  } catch (error) {
+    if (error.code === 'ORDER_LOCKED') return lockedResponse(res);
+    throw error;
+  }
+
+  req.session.flash = { type: 'success', text: 'Orden actualizada.' };
+  return res.redirect(`/ordenes/${req.params.id}`);
+}
+
+// HU-10: la confirmación se pide en pantalla (modal) antes de enviar la petición DELETE.
+async function deleteOrder(req, res, next) {
+  const deleted = await orderService.deleteOrder(req.params.id);
+  if (!deleted) return next();
+
+  req.session.flash = { type: 'success', text: 'Orden eliminada.' };
+  return res.redirect('/ordenes');
+}
+
+module.exports = {
+  showNewOrder,
+  searchCustomer,
+  createOrder,
+  listOrders,
+  showOrder,
+  showEdit,
+  updateOrder,
+  deleteOrder,
+};

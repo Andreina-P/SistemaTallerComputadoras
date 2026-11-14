@@ -11,7 +11,16 @@
     Orden <%= order.orderNumber %>
     <span class="badge estado estado-<%= order.status %> ms-2"><%= statusLabels[order.status] %></span>
   </h1>
-  <div class="d-flex gap-2"><%# Aquí irán las acciones de administrador (editar y eliminar, HU-10). %></div>
+  <% if (currentUser.role === ROLES.ADMIN) { %>
+    <div class="d-flex gap-2">
+      <% if (order.status !== 'delivered' && order.status !== 'cancelled') { %>
+        <a class="btn btn-outline-primary" href="/ordenes/<%= order.id %>/editar">Editar</a>
+      <% } %>
+      <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalEliminar">
+        Eliminar
+      </button>
+    </div>
+  <% } %>
 </div>
 
 <div class="row g-4">
@@ -68,3 +77,26 @@
     </div>
   </div>
 </div>
+
+<% if (currentUser.role === ROLES.ADMIN) { %>
+  <div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="tituloEliminar" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" method="post" action="/ordenes/<%= order.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+        <input type="hidden" name="_method" value="DELETE">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="tituloEliminar">Eliminar orden</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          ¿Seguro que quieres eliminar la orden <strong><%= order.orderNumber %></strong>?
+          Se borrarán también su historial y sus mensajes. Esta acción no se puede deshacer.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+<% } %>

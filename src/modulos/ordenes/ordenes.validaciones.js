@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const { DEVICE_TYPES } = require('../../compartido/constantes');
 const { todayIso } = require('../../compartido/utilidades/formato');
 const orderService = require('./ordenes.servicio');
+const usersService = require('../autenticacion/usuarios.servicio');
 
 // Campos del equipo y de la recepción, comunes a crear (HU-07) y editar (HU-10).
 const orderFieldRules = [
@@ -56,6 +57,22 @@ const createOrderRules = [
   ...orderFieldRules,
 ];
 
+// HU-10: las mismas reglas de HU-07 más el técnico asignado, que es opcional pero debe tener rol técnico.
+const editOrderRules = [
+  ...orderFieldRules,
+  body('technician_id')
+    .optional({ values: 'falsy' })
+    .isInt({ min: 1 })
+    .withMessage('Elige un técnico válido.')
+    .bail()
+    .custom(async (technicianId) => {
+      if (!(await usersService.isActiveTechnician(Number(technicianId)))) {
+        throw new Error('El técnico asignado debe tener rol técnico.');
+      }
+      return true;
+    }),
+];
+
 // Devuelve { errors: { campo: 'mensaje' }, values, hasErrors } para volver a mostrar el formulario.
 function collectErrors(req) {
   const result = validationResult(req);
@@ -66,4 +83,4 @@ function collectErrors(req) {
   return { errors, values: req.body, hasErrors: !result.isEmpty() };
 }
 
-module.exports = { orderFieldRules, createOrderRules, collectErrors };
+module.exports = { orderFieldRules, createOrderRules, editOrderRules, collectErrors };

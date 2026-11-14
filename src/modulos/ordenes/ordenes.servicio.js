@@ -227,7 +227,68 @@ async function getOrderDetail(user, orderId) {
   };
 }
 
+const LOCKED_STATUSES = [ORDER_STATUS.DELIVERED, ORDER_STATUS.CANCELLED];
+
+// HU-10: una orden Entregada o Cancelada ya no se modifica.
+function isLocked(order) {
+  return LOCKED_STATUSES.includes(order.status);
+}
+
+// Orden por identificador para el formulario de edición (sin filtro de rol: solo la usa el administrador).
+async function findOrderForEdit(orderId) {
+  const id = Number(orderId);
+  if (!Number.isInteger(id) || id < 1) return null;
+
+  const order = await Order.findByPk(id, {
+    include: [{ model: Customer, as: 'customer', attributes: ['id', 'userId', 'nationalId'] }],
+  });
+  if (!order) return null;
+
+  const names = await usersService.findUsersByIds([order.customer.userId]);
+  return {
+    order,
+    customerName: names.get(order.customer.userId)?.name ?? '',
+    locked: isLocked(order),
+  };
+}
+
+// HU-10: actualiza los datos de la orden y el técnico asignado (null = sin técnico).
+// El estado no se cambia aquí (eso es HU-11). Devuelve null si no existe y lanza ORDER_LOCKED si no se puede editar.
+async function updateOrder(orderId, data) {
+  const order = await Order.findByPk(Number(orderId));
+  if (!order) return null;
+
+  if (isLocked(order)) {
+    const error = new Error('Una orden Entregada o Cancelada no se puede editar.');
+    error.code = 'ORDER_LOCKED';
+    throw error;
+  }
+
+  await order.update({
+    deviceType: data.deviceType,
+    brand: data.brand,
+    model: data.model,
+    serialNumber: data.serialNumber || null,
+    reportedIssue: data.reportedIssue,
+    receivedAt: data.receivedAt,
+    estimatedCost: data.estimatedCost,
+    technicianId: data.technicianId ?? null,
+  });
+  return order;
+}
+
+// HU-10: elimina la orden; su historial y mensajes se borran en cascada. Devuelve false si no existía.
+async function deleteOrder(orderId) {
+  const id = Number(orderId);
+  if (!Number.isInteger(id) || id < 1) return false;
+  return (await Order.destroy({ where: { id } })) > 0;
+}
+
 module.exports = {
+  findOrderForEdit,
+  updateOrder,
+  deleteOrder,
+  isLocked,
   findCustomerByNationalId,
   createOrder,
   listOrders,

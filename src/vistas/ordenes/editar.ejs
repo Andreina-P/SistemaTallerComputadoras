@@ -1,0 +1,49 @@
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/ordenes">Órdenes</a></li>
+        <li class="breadcrumb-item"><a href="/ordenes/<%= order.id %>"><%= order.orderNumber %></a></li>
+        <li class="breadcrumb-item active" aria-current="page">Editar</li>
+      </ol>
+    </nav>
+    <h1 class="h3 mb-3">Editar orden <%= order.orderNumber %></h1>
+
+    <form method="post" action="/ordenes/<%= order.id %>/editar" class="needs-validation" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6">Cliente</h2>
+          <p class="mb-0"><%= customerName %> <span class="text-secondary">(no se puede cambiar)</span></p>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6">Equipo</h2>
+          <%- include('_campos-orden', { values, errors, today }) %>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6">Técnico asignado</h2>
+          <label for="technician_id" class="visually-hidden">Técnico</label>
+          <select id="technician_id" name="technician_id" class="form-select<%= errors.technician_id ? ' is-invalid' : '' %>">
+            <option value="">Sin asignar</option>
+            <% technicians.forEach((technician) => { %>
+              <option value="<%= technician.id %>" <%= String(values.technician_id) === String(technician.id) ? 'selected' : '' %>><%= technician.name %></option>
+            <% }) %>
+          </select>
+          <div class="invalid-feedback"><%= errors.technician_id || '' %></div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a class="btn btn-outline-secondary" href="/ordenes/<%= order.id %>">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
