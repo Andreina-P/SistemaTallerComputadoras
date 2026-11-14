@@ -4,6 +4,8 @@ const orderService = require('./ordenes.servicio');
 const usersService = require('../autenticacion/usuarios.servicio');
 const { collectErrors } = require('./ordenes.validaciones');
 const format = require('../../compartido/utilidades/formato');
+const notices = require('../../compartido/utilidades/avisos');
+const { STATUS_LABELS } = require('../../compartido/constantes');
 
 const { todayIso } = format;
 
@@ -104,6 +106,34 @@ const STATUS_ERROR_HTTP = {
   MISSING_REQUIREMENT: 400,
 };
 
+// HU-12: avisa en tiempo real del cambio a quien corresponde (evento order:status-changed).
+// Se ejecuta después de guardar. Si el aviso falla, el cambio ya está hecho y no se deshace.
+// El aviso no incluye el comentario: puede ser una nota interna que el cliente no debe ver.
+async function announceStatusChange(req, order, previousStatus) {
+  const io = req.app.get('io');
+  if (!io) return;
+
+  try {
+    const recipients = await orderService.getOrderRecipientIds(order);
+    notices.emitToUsers(
+      io,
+      recipients,
+      'order:status-changed',
+      {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        previousStatus,
+        newStatus: order.status,
+        newStatusLabel: STATUS_LABELS[order.status],
+        at: new Date().toISOString(),
+      },
+      { exceptUserId: req.session.user.id }, // quien hizo el cambio ya lo ve en pantalla
+    );
+  } catch (error) {
+    console.error('No se pudo enviar el aviso de cambio de estado:', error.message);
+  }
+}
+
 async function changeStatus(req, res, next) {
   const { errors, values, hasErrors } = collectErrors(req);
   if (hasErrors) {
@@ -114,11 +144,16 @@ async function changeStatus(req, res, next) {
   }
 
   try {
-    const { order } = await orderService.changeOrderStatus(req.session.user, req.params.id, {
-      newStatus: req.body.new_status,
-      comment: req.body.comment,
-      customerVisible: req.body.customer_visible,
-    });
+    const { order, previousStatus } = await orderService.changeOrderStatus(
+      req.session.user,
+      req.params.id,
+      {
+        newStatus: req.body.new_status,
+        comment: req.body.comment,
+        customerVisible: req.body.customer_visible,
+      },
+    );
+    await announceStatusChange(req, order, previousStatus);
     req.session.flash = {
       type: 'success',
       text: `Estado actualizado a ${res.locals.statusLabels[order.status]}.`,

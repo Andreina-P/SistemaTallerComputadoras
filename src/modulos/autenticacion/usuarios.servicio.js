@@ -36,8 +36,23 @@ async function listTechnicians() {
   });
 }
 
+// Identificadores de los administradores activos (destinatarios de avisos del taller).
+async function listActiveAdminIds() {
+  const admins = await User.findAll({
+    where: { role: ROLES.ADMIN, active: true },
+    attributes: ['id'],
+  });
+  return admins.map((admin) => admin.id);
+}
+
 async function isActiveTechnician(userId) {
   return (await User.count({ where: { id: userId, role: ROLES.TECHNICIAN, active: true } })) > 0;
 }
 
-module.exports = { findUsersByIds, findUserIdsByName, listTechnicians, isActiveTechnician };
+module.exports = {
+  findUsersByIds,
+  findUserIdsByName,
+  listTechnicians,
+  listActiveAdminIds,
+  isActiveTechnician,
+};

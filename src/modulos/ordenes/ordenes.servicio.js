@@ -380,7 +380,16 @@ async function changeOrderStatus(user, orderId, { newStatus, comment, customerVi
   });
 }
 
+// HU-12: identificadores de los usuarios que deben enterarse de un cambio en la orden:
+// el cliente dueño, el técnico asignado y los administradores. Nadie más.
+async function getOrderRecipientIds(order) {
+  const customer = await Customer.findByPk(order.customerId, { attributes: ['userId'] });
+  const adminIds = await usersService.listActiveAdminIds();
+  return [...new Set([customer?.userId, order.technicianId, ...adminIds])].filter(Boolean);
+}
+
 module.exports = {
+  getOrderRecipientIds,
   changeOrderStatus,
   nextStatusesFor,
   findOrderForEdit,
