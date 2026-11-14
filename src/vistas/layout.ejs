@@ -23,5 +23,9 @@
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/js/validacion-formularios.js"></script>
+  <% if (locals.currentUser) { %>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/tiempo-real.js"></script>
+  <% } %>
 </body>
 </html>

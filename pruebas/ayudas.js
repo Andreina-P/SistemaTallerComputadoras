@@ -68,6 +68,15 @@ async function loginAgent(app, email, password = 'Clave1234') {
   return agent;
 }
 
+// Cookie de sesión de un agente de supertest, lista para enviarla en la conexión de Socket.IO.
+function cookieOf(agent) {
+  const { CookieAccessInfo } = require('cookiejar');
+  return agent.jar
+    .getCookies(new CookieAccessInfo('127.0.0.1', '/'))
+    .map((cookie) => `${cookie.name}=${cookie.value}`)
+    .join('; ');
+}
+
 async function cleanTestUsers() {
   // Las órdenes de los clientes de prueba, o con historial escrito por usuarios de prueba, se borran
   // primero (su historial y mensajes se borran en cascada) porque users y customers están protegidos.
@@ -97,6 +106,7 @@ module.exports = {
   validCustomerData,
   createTestUser,
   loginAgent,
+  cookieOf,
   cleanTestUsers,
   closeConnections,
 };

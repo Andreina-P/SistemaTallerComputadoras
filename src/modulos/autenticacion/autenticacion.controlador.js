@@ -1,6 +1,7 @@
 // Controlador de autenticación: recibe la petición, llama al servicio y responde (HU-01 a HU-05).
 // No pongas aquí la lógica de negocio; va en autenticacion.servicio.js.
 const authService = require('./autenticacion.servicio');
+const { userRoom } = require('../../compartido/utilidades/salas');
 const { SESSION_COOKIE_NAME } = require('../../configuracion/sesion');
 const { collectErrors, matchedData } = require('./autenticacion.validaciones');
 
@@ -86,6 +87,10 @@ async function login(req, res) {
 
 // HU-04: destruye la sesión en el servidor y borra las cookies.
 function logout(req, res, next) {
+  // Cierra también las conexiones de tiempo real de este usuario: ya no tiene sesión.
+  const userId = req.session.user?.id;
+  if (userId) req.app.get('io')?.in(userRoom(userId)).disconnectSockets(true);
+
   req.session.destroy((error) => {
     if (error) return next(error);
     res.clearCookie(SESSION_COOKIE_NAME);
