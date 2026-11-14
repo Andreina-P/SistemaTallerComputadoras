@@ -24,6 +24,12 @@
             mensaje: 'Mínimo 8 caracteres, con al menos una letra y un número.'
           }) %>
 
+          <%- include('../parciales/campo', {
+            name: 'password_confirm', label: 'Repite la contraseña', type: 'password', errors,
+            atributos: 'required maxlength="72" data-coincide="password" autocomplete="new-password"',
+            mensaje: 'Las contraseñas no coinciden.'
+          }) %>
+
           <div class="mb-3">
             <label for="role" class="form-label">Rol</label>
             <select id="role" name="role" class="form-select<%= errors.role ? ' is-invalid' : '' %>" required

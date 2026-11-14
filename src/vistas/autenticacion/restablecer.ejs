@@ -12,9 +12,15 @@
         <input type="hidden" name="token" value="<%= token %>">
 
         <%- include('../parciales/campo', {
-          name: 'password', label: 'Clave nueva', type: 'password', errors,
+          name: 'password', label: 'Contraseña nueva', type: 'password', errors,
           atributos: 'required minlength="8" maxlength="72" pattern="(?=.*[A-Za-z])(?=.*\\d).{8,72}" autocomplete="new-password"',
           mensaje: 'Mínimo 8 caracteres, con al menos una letra y un número.'
+        }) %>
+
+        <%- include('../parciales/campo', {
+          name: 'password_confirm', label: 'Repite la contraseña', type: 'password', errors,
+          atributos: 'required maxlength="72" data-coincide="password" autocomplete="new-password"',
+          mensaje: 'Las contraseñas no coinciden.'
         }) %>
 
         <button type="submit" class="btn btn-primary w-100">Cambiar clave</button>

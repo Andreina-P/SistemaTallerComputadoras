@@ -22,6 +22,11 @@
         mensaje: 'Mínimo 8 caracteres, con al menos una letra y un número.'
       }) %>
       <%- include('../parciales/campo', {
+        name: 'password_confirm', label: 'Repite la contraseña', type: 'password', errors,
+        atributos: 'required maxlength="72" data-coincide="password" autocomplete="new-password"',
+        mensaje: 'Las contraseñas no coinciden.'
+      }) %>
+      <%- include('../parciales/campo', {
         name: 'national_id', label: 'Cédula', value: values.national_id, errors,
         atributos: 'required inputmode="numeric" maxlength="10" pattern="\\d{10}"',
         mensaje: 'La cédula debe tener 10 dígitos.'
