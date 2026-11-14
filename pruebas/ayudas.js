@@ -27,7 +27,7 @@ async function csrfFrom(agent, path) {
 }
 
 function validCustomerData(overrides = {}) {
-  return {
+  const data = {
     name: 'Ana Pérez',
     email: uniqueEmail(),
     password: 'Clave1234',
@@ -35,6 +35,9 @@ function validCustomerData(overrides = {}) {
     phone: randomDigits(10),
     ...overrides,
   };
+  // El campo "Repite la contraseña" es igual a la contraseña, salvo que la prueba lo cambie a propósito.
+  if (!('password_confirm' in overrides)) data.password_confirm = data.password;
+  return data;
 }
 
 // Crea un usuario de prueba con la clave indicada y, si es cliente, su perfil.
