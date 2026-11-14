@@ -1,0 +1,35 @@
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <h1 class="h3 mb-3">Nueva orden de reparación</h1>
+
+    <form method="post" action="/ordenes/nueva" class="needs-validation" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6">Cliente</h2>
+          <%- include('../parciales/campo', {
+            name: 'national_id', label: 'Cédula del cliente', value: values.national_id, errors,
+            atributos: 'required inputmode="numeric" maxlength="10" pattern="\\d{10}" autocomplete="off"',
+            mensaje: 'La cédula debe tener 10 dígitos.'
+          }) %>
+          <p id="resultado-cliente" class="mb-0 small" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6">Equipo</h2>
+          <%- include('_campos-orden', { values, errors, today }) %>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Crear orden</button>
+        <a class="btn btn-outline-secondary" href="/ordenes">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/ordenes-nueva.js"></script>
