@@ -180,6 +180,19 @@ async function canUserAccessOrder(user, orderId) {
   return (await Order.count({ where: { ...access, id } })) > 0;
 }
 
+// Para el chat (HU-13): null si el usuario no puede ver la orden; si puede, indica si el chat es de solo
+// lectura (orden Entregada o Cancelada). Es la misma regla de acceso que canUserAccessOrder.
+async function getOrderChatAccess(user, orderId) {
+  const id = Number(orderId);
+  if (!user || !Number.isInteger(id) || id < 1) return null;
+
+  const access = await accessFilter(user);
+  if (!access) return null;
+
+  const order = await Order.findOne({ where: { ...access, id }, attributes: ['id', 'status'] });
+  return order ? { readOnly: isLocked(order) } : null;
+}
+
 // HU-09: orden con su historial, o null si no existe o el usuario no tiene acceso.
 // El cliente solo ve los comentarios marcados como visibles.
 async function getOrderDetail(user, orderId) {
@@ -389,6 +402,7 @@ async function getOrderRecipientIds(order) {
 }
 
 module.exports = {
+  getOrderChatAccess,
   getOrderRecipientIds,
   changeOrderStatus,
   nextStatusesFor,

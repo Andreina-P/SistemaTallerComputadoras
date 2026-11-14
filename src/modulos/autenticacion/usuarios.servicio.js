@@ -11,7 +11,7 @@ async function findUsersByIds(ids) {
 
   const users = await User.findAll({
     where: { id: unique },
-    attributes: ['id', 'name', 'email'],
+    attributes: ['id', 'name', 'email', 'role'],
   });
   return new Map(users.map((user) => [user.id, user.toJSON()]));
 }
