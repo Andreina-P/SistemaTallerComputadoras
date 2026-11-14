@@ -60,7 +60,7 @@
             <% if (currentUser.role === ROLES.ADMIN) { %>
               <td><%= order.technicianName || 'Sin asignar' %></td>
             <% } %>
-            <td><span class="badge estado estado-<%= order.status %>"><%= statusLabels[order.status] %></span></td>
+            <td><span class="badge estado estado-<%= order.status %>" data-orden-estado="<%= order.id %>"><%= statusLabels[order.status] %></span></td>
             <td class="text-end"><%= format.formatMoney(order.estimatedCost) %></td>
           </tr>
         <% }) %>

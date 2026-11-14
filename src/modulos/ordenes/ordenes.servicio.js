@@ -8,7 +8,7 @@ const sequelize = require('../../configuracion/baseDeDatos');
 const Order = require('./orden.modelo');
 const Customer = require('./cliente.modelo');
 const StatusHistory = require('./historialEstado.modelo');
-const { ORDER_STATUS, ROLES } = require('../../compartido/constantes');
+const { ORDER_STATUS, ROLES, ALLOWED_TRANSITIONS } = require('../../compartido/constantes');
 const usersService = require('../autenticacion/usuarios.servicio');
 
 const MAX_NUMBER_RETRIES = 3;
@@ -284,7 +284,114 @@ async function deleteOrder(orderId) {
   return (await Order.destroy({ where: { id } })) > 0;
 }
 
+// HU-11: estados a los que puede pasar este usuario desde el estado actual de la orden.
+// Lista vacía si no puede cambiarla: el cliente nunca, el técnico solo si la tiene asignada
+// y solo el administrador puede pasar de Listo a Entregado.
+function nextStatusesFor(user, order) {
+  const isAdmin = user.role === ROLES.ADMIN;
+  const isAssignedTechnician = user.role === ROLES.TECHNICIAN && order.technicianId === user.id;
+  if (!isAdmin && !isAssignedTechnician) return [];
+
+  return (ALLOWED_TRANSITIONS[order.status] ?? []).filter(
+    (status) => status !== ORDER_STATUS.DELIVERED || isAdmin,
+  );
+}
+
+function statusError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
+// HU-11: cambia el estado de una orden y guarda el cambio en el historial, todo en una transacción.
+// La fila de la orden se bloquea durante el cambio para que dos cambios simultáneos no se pisen.
+//
+// Devuelve { order, previousStatus, historyEntry }. Con esos datos el controlador podrá avisar en
+// tiempo real (HU-12) DESPUÉS de que la transacción terminó. Errores (error.code):
+//   ORDER_NOT_FOUND     no existe o el usuario no puede verla (404)
+//   FORBIDDEN_STATUS    el rol no puede hacer ese cambio (403)
+//   INVALID_TRANSITION  el flujo no permite pasar de un estado al otro (409)
+//   MISSING_REQUIREMENT falta técnico, costo estimado o comentario (400)
+async function changeOrderStatus(user, orderId, { newStatus, comment, customerVisible }) {
+  const id = Number(orderId);
+  if (!Number.isInteger(id) || id < 1) throw statusError('ORDER_NOT_FOUND', 'Orden no encontrada.');
+
+  const cleanComment = typeof comment === 'string' ? comment.trim() : '';
+
+  return sequelize.transaction(async (transaction) => {
+    const order = await Order.findByPk(id, { transaction, lock: transaction.LOCK.UPDATE });
+    if (!order) throw statusError('ORDER_NOT_FOUND', 'Orden no encontrada.');
+
+    // Un técnico no ve (ni cambia) las órdenes que no tiene asignadas.
+    if (user.role === ROLES.TECHNICIAN && order.technicianId !== user.id) {
+      throw statusError('ORDER_NOT_FOUND', 'Orden no encontrada.');
+    }
+    if (![ROLES.ADMIN, ROLES.TECHNICIAN].includes(user.role)) {
+      throw statusError('FORBIDDEN_STATUS', 'No tienes permiso para cambiar el estado.');
+    }
+
+    const previousStatus = order.status;
+    if (!(ALLOWED_TRANSITIONS[previousStatus] ?? []).includes(newStatus)) {
+      throw statusError(
+        'INVALID_TRANSITION',
+        'Ese cambio de estado no está permitido en el flujo.',
+      );
+    }
+    if (newStatus === ORDER_STATUS.DELIVERED && user.role !== ROLES.ADMIN) {
+      throw statusError(
+        'FORBIDDEN_STATUS',
+        'Solo el administrador puede marcar una orden como Entregada.',
+      );
+    }
+
+    if (newStatus === ORDER_STATUS.DIAGNOSING && !order.technicianId) {
+      throw statusError(
+        'MISSING_REQUIREMENT',
+        'Asigna un técnico antes de pasar a En diagnóstico.',
+      );
+    }
+    if (newStatus === ORDER_STATUS.REPAIRING && !(Number(order.estimatedCost) > 0)) {
+      throw statusError(
+        'MISSING_REQUIREMENT',
+        'Registra el costo estimado antes de pasar a En reparación.',
+      );
+    }
+    if ([ORDER_STATUS.READY, ORDER_STATUS.CANCELLED].includes(newStatus) && !cleanComment) {
+      throw statusError(
+        'MISSING_REQUIREMENT',
+        'Escribe un comentario para marcar la orden como Listo o Cancelado.',
+      );
+    }
+
+    await order.update({ status: newStatus }, { transaction });
+    const historyEntry = await StatusHistory.create(
+      {
+        orderId: order.id,
+        previousStatus,
+        newStatus,
+        comment: cleanComment || null,
+        customerVisible: Boolean(customerVisible),
+        userId: user.id,
+      },
+      { transaction },
+    );
+
+    return { order, previousStatus, historyEntry };
+  });
+}
+
+// HU-12: identificadores de los usuarios que deben enterarse de un cambio en la orden:
+// el cliente dueño, el técnico asignado y los administradores. Nadie más.
+async function getOrderRecipientIds(order) {
+  const customer = await Customer.findByPk(order.customerId, { attributes: ['userId'] });
+  const adminIds = await usersService.listActiveAdminIds();
+  return [...new Set([customer?.userId, order.technicianId, ...adminIds])].filter(Boolean);
+}
+
 module.exports = {
+  getOrderRecipientIds,
+  changeOrderStatus,
+  nextStatusesFor,
   findOrderForEdit,
   updateOrder,
   deleteOrder,

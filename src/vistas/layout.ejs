@@ -21,7 +21,16 @@
 
   <%- include('parciales/pie') %>
 
+  <% if (locals.currentUser) { %>
+    <div id="avisos" class="toast-container position-fixed top-0 end-0 p-3" aria-live="polite" aria-atomic="true"></div>
+  <% } %>
+
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/js/validacion-formularios.js"></script>
+  <% if (locals.currentUser) { %>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/tiempo-real.js"></script>
+    <script src="/js/avisos.js"></script>
+  <% } %>
 </body>
 </html>
