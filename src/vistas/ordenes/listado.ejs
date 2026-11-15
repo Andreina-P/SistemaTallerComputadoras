@@ -53,7 +53,10 @@
       <tbody>
         <% orders.forEach((order) => { %>
           <tr>
-            <td><a href="/ordenes/<%= order.id %>" class="fw-semibold"><%= order.orderNumber %></a></td>
+            <td>
+              <a href="/ordenes/<%= order.id %>" class="fw-semibold"><%= order.orderNumber %></a>
+              <span class="badge text-bg-danger d-none" data-sin-leer="<%= order.id %>">Mensaje nuevo</span>
+            </td>
             <% if (!isCustomer) { %><td><%= order.customerName %></td><% } %>
             <td><%= deviceLabels[order.deviceType] %> · <%= order.brand %> <%= order.model %></td>
             <td><%= format.formatDate(order.receivedAt) %></td>

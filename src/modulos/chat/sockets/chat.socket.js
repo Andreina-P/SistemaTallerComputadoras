@@ -12,6 +12,7 @@
 // Seguridad: la conexión ya viene autenticada con la sesión (sockets/index.js). El navegador nunca elige
 // una sala: pide unirse y el servidor decide, consultando la base de datos, según el rol y la orden.
 const orderService = require('../../ordenes/ordenes.servicio');
+const { announceUnreadMessage } = require('./notificaciones.socket');
 const chatService = require('../chat.servicio');
 const { orderRoom, GENERAL_ROOM } = require('../../../compartido/utilidades/salas');
 const { ROLES } = require('../../../compartido/constantes');
@@ -44,7 +45,7 @@ async function announcePresence(io, room) {
 }
 
 // Responde por el ack si existe; así un cliente que no lo envía no rompe el servidor.
-const safeAck = (ack) => (typeof ack === 'function' ? ack : () => {});
+const safeAck = (ack) => (typeof ack === 'function' ? ack : () => { });
 
 function parseOrderId(payload) {
   const orderId = Number(payload?.orderId);
@@ -156,6 +157,14 @@ module.exports = function registerChat(io) {
         text: checked.text,
       });
       io.to(room).emit('message:new', { scope: payload.scope, ...message });
+      // HU-15: quienes no tienen abierto este chat reciben un indicador de mensaje nuevo.
+      if (orderId) {
+        await announceUnreadMessage(io, {
+          orderId,
+          author: user,
+          createdAt: message.createdAt,
+        });
+      }
       return reply({ ok: true });
     });
 

@@ -7,6 +7,7 @@
 //   GET/POST /recuperar       HU-03  Pedir enlace de recuperación de clave
 //   GET/POST /restablecer     HU-03  Definir la clave nueva con el token
 //   GET/POST /admin/usuarios  HU-05  Crear usuarios del personal
+//   GET/POST /perfil          HU-16  Perfil del cliente (ver perfil.controlador.js)
 const express = require('express');
 const controller = require('./autenticacion.controlador');
 const {
@@ -16,8 +17,16 @@ const {
   resetRules,
   loginRules,
 } = require('./autenticacion.validaciones');
-const { requireAuth, requireGuest, requireAdmin } = require('../../compartido/middlewares/sesion');
+const {
+  requireAuth,
+  requireGuest,
+  requireAdmin,
+  requireRole,
+} = require('../../compartido/middlewares/sesion');
 const { createLimiter } = require('../../compartido/middlewares/limitador');
+const profileController = require('./perfil.controlador');
+const { profileRules } = require('./perfil.validaciones');
+const { ROLES } = require('../../compartido/constantes');
 const { loginMaxAttempts } = require('../../configuracion/entorno');
 
 const router = express.Router();
@@ -46,5 +55,15 @@ router.post('/restablecer', requireGuest, resetRules, controller.reset);
 // Solo el administrador crea usuarios del personal.
 router.get('/admin/usuarios', requireAuth, requireAdmin, controller.showStaff);
 router.post('/admin/usuarios', requireAuth, requireAdmin, staffRules, controller.createStaff);
+
+// HU-16: el cliente ve y edita su propio perfil (no hay identificador en la ruta).
+router.get('/perfil', requireAuth, requireRole(ROLES.CUSTOMER), profileController.showProfile);
+router.post(
+  '/perfil',
+  requireAuth,
+  requireRole(ROLES.CUSTOMER),
+  profileRules,
+  profileController.updateProfile,
+);
 
 module.exports = router;
