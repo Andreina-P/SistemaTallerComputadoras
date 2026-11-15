@@ -15,7 +15,9 @@
     "db:seed": "sequelize-cli db:seed:all",
     "db:reset": "sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate && sequelize-cli db:seed:all",
     "test": "jest --runInBand",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "medir:listado": "node scripts/medir-listado.js",
+    "lighthouse": "node scripts/lighthouse.js"
   },
   "jest": {
     "testEnvironment": "node",
