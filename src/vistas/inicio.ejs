@@ -10,13 +10,3 @@
     <a class="btn btn-primary btn-lg" href="/ordenes">Ver órdenes</a>
   <% } %>
 </section>
-
-<section class="py-4">
-  <h2 class="h5">Estados de una orden</h2>
-  <p class="text-secondary">Los colores de los estados son los mismos en todas las pantallas.</p>
-  <div class="d-flex flex-wrap gap-2">
-    <% Object.entries(statusLabels).forEach(([code, label]) => { %>
-      <span class="badge estado estado-<%= code %>"><%= label %></span>
-    <% }) %>
-  </div>
-</section>

@@ -1,81 +1,9 @@
 # Modelo entidad-relación
 
 Seis tablas en PostgreSQL. Los nombres de tablas y columnas están en inglés y en snake_case.
-Este diagrama debe mantenerse igual que las migraciones de `base-de-datos/migraciones/`.
+Este diagrama se relaciona con como se llenan las tablas en las migraciones de `base-de-datos/migraciones/`.
 
-```mermaid
-erDiagram
-    users ||--o| customers : "tiene perfil"
-    users ||--o{ recovery_tokens : "solicita"
-    users ||--o{ orders : "es técnico de"
-    users ||--o{ status_history : "registra"
-    users ||--o{ messages : "envía"
-    customers ||--o{ orders : "tiene"
-    orders ||--o{ status_history : "acumula"
-    orders ||--o{ messages : "tiene chat"
-
-    users {
-        int id PK
-        string name
-        string email UK
-        string password_hash
-        enum role "admin, technician, customer"
-        boolean active
-        datetime created_at
-    }
-
-    customers {
-        int id PK
-        int user_id FK, UK
-        string national_id UK
-        string phone
-        string address
-    }
-
-    orders {
-        int id PK
-        string order_number UK
-        int customer_id FK
-        int technician_id FK
-        enum device_type
-        string brand
-        string model
-        string serial_number
-        string reported_issue
-        date received_at
-        enum status
-        decimal estimated_cost
-        datetime created_at
-        datetime updated_at
-    }
-
-    status_history {
-        int id PK
-        int order_id FK
-        enum previous_status
-        enum new_status
-        string comment
-        boolean customer_visible
-        int user_id FK
-        datetime created_at
-    }
-
-    messages {
-        int id PK
-        int order_id FK "nulo = sala general"
-        int user_id FK
-        string text
-        datetime created_at
-    }
-
-    recovery_tokens {
-        int id PK
-        int user_id FK
-        string token_hash UK
-        datetime expires_at
-        datetime used_at
-    }
-```
+![Modelo E-R](../bocetos/Entidades.drawio.png)
 
 ## Valores de los enum
 
