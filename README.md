@@ -142,9 +142,9 @@ Resumen: un solo proyecto desplegable. Express recibe las peticiones, los **mód
 | **WebSocket autenticado:** sin sesión, la conexión se rechaza | `sockets/index.js` |
 | Mensajes del chat saneados (sin HTML) antes de guardarse y mostrarse | `chat.servicio.js` |
 
-## 8. Despliegue con HTTPS (wss)
+## 8. [Plan Objetivo] Despliegue con HTTPS (wss)
 
-El cliente de Socket.IO se conecta al mismo origen desde donde se cargó la página. Por eso, **en el despliegue la aplicación debe servirse detrás de HTTPS** (por ejemplo con un proxy inverso como Nginx o Caddy con certificado): así el navegador usa `https` y el chat se conecta por **`wss://`** cifrado. En desarrollo local se usa `http` y `ws` sin cifrar.
+El cliente de Socket.IO se conecta al mismo origen desde donde se cargó la página. Por eso, para **el despliegue la aplicación en prod debe servirse detrás de HTTPS** (por ejemplo con un proxy inverso como Nginx o Caddy con certificado): así el navegador usa `https` y el chat se conecta por **`wss://`** cifrado. En desarrollo local se usa `http` y `ws` sin cifrar.
 
 ## 9. Diseño del chat
 
@@ -163,7 +163,7 @@ El cliente de Socket.IO se conecta al mismo origen desde donde se cargó la pág
 | 3 | Recuperación de clave (HU-03), crear orden (HU-07), listado, detalle y edición de órdenes (HU-08, HU-09, HU-10), conexión base de Socket.IO | Integrantes 1, 2 y 3 |
 | 4 | Cambiar estado (HU-11), aviso del cambio de estado (HU-12), chat por orden (HU-13) y sala general (HU-14) | Integrantes 3 y 4 |
 | 5 | Clientes (HU-06), aviso de mensaje nuevo (HU-15), perfil del cliente (HU-16), pruebas y rendimiento (T-02) | Integrantes 4 y 5 |
-| 6 | README, diagramas, presentación, ensayo de la demostración y etiqueta `v1.0-b1` (T-03) | Todos, coordina el Integrante 1 |
+| 6 | README, diagramas, y etiqueta `v1.0-b1` (T-03) | Todos, coordina el Integrante 1 |
 
 ## 11. Integrantes
 
